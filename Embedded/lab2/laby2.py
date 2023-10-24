@@ -6,7 +6,7 @@ def decimal_to_binary(decimal):
         remainder = decimal % 2
         binary = str(remainder) + binary
         decimal = decimal // 2
-    return binary
+    print(f"Wartosc w systemie dwojkowym: {binary}")
 
 def decimal_to_hexadecimal(decimal):
     hexadecimal = ""
@@ -19,33 +19,40 @@ def decimal_to_hexadecimal(decimal):
         else:
             hexadecimal = chr(ord('A') + remainder - 10) + hexadecimal
         decimal = decimal // 16
-    return hexadecimal
+    print(f"Wartosc w systemie szesnastkowym: {hexadecimal}")
 
-def sterowanie():
+def driver():
     try:
-        decimal_number = int(input("Podaj liczbę dziesiętną: "))
+        decimal_number = int(input("Podaj liczbe dziesietną: "))
         if decimal_number < 0:
-            print("Wprowadzona liczba musi być nieujemna.")
-            return
-
-        system_choice = input("Wybierz system liczbowy (2 - dwójkowy, 16 - szesnastkowy): ")
-
-        if system_choice == "2":
-            binary_number = decimal_to_binary(decimal_number)
-            print(f"Wartość w systemie dwójkowym: {binary_number}")
-        elif system_choice == "16":
-            hexadecimal_number = decimal_to_hexadecimal(decimal_number)
-            print(f"Wartość w systemie szesnastkowym: {hexadecimal_number}")
+            print("Wprowadzona liczba musi byc nieujemna.")
         else:
-            print("Niepoprawny wybór systemu liczbowego.")
+            system_choice = input("Wybierz system liczbowy (2 - dwojkowy, 16 - szesnastkowy): ")
+
+            if system_choice == "2":
+                decimal_to_binary(decimal_number)
+                choice = input("Czy podac liczbe w systemie szesnastkowym? (t/n): ")
+                if choice == 'T' or choice == 't':
+                    decimal_to_hexadecimal(decimal_number)
+            elif system_choice == "16":
+                decimal_to_hexadecimal(decimal_number)
+                choice = input("Czy podac liczbe w systemie dwojkowym? (t/n): ")
+                if choice == 'T' or choice == 't':
+                    decimal_to_binary(decimal_number)
+            else:
+                print("Niepoprawny wybor systemu liczbowego.")
 
     except ValueError:
-        print("Wprowadzono niepoprawną liczbę dziesiętną.")
+        print("ValueError - sprobuj ponownie.")
 
 def main():
     on = True
     while(on):
-        sterowanie()
+        driver()
         k = input("Kontynuowac? (t/n) : ") 
         if k == 'N' or k == 'n':
             on = False
+        # elif  k != 'T' or k != 't':
+        #     print("Blad - sprobuj ponownie.")
+
+main()
