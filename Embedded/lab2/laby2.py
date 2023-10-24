@@ -21,7 +21,7 @@ def decimal_to_hexadecimal(decimal):
         decimal = decimal // 16
     return hexadecimal
 
-def main():
+def sterowanie():
     try:
         decimal_number = int(input("Podaj liczbę dziesiętną: "))
         if decimal_number < 0:
@@ -42,11 +42,10 @@ def main():
     except ValueError:
         print("Wprowadzono niepoprawną liczbę dziesiętną.")
 
-
-if __name__ == "__main__":
+def main():
     on = True
     while(on):
         sterowanie()
-        k = input("Kontynuowac? (T/N) : ") 
+        k = input("Kontynuowac? (t/n) : ") 
         if k == 'N' or k == 'n':
             on = False
