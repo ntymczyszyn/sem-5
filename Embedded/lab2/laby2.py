@@ -46,7 +46,7 @@ def main():
 if __name__ == "__main__":
     on = True
     while(on):
-        main()
+        sterowanie()
         k = input("Kontynuowac? (T/N) : ") 
         if k == 'N' or k == 'n':
             on = False
