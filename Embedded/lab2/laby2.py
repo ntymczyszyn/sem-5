@@ -23,9 +23,9 @@ def decimal_to_hexadecimal(decimal):
 
 def driver():
     try:
-        decimal_number = int(input("Podaj liczbe dziesietną: "))
+        decimal_number = int(input("Podaj nieujemna liczbe dziesietną: "))
         if decimal_number < 0:
-            print("Wprowadzona liczba musi byc nieujemna.")
+            print("Wprowadzona liczba musi byc nieujemna!")
         else:
             system_choice = input("Wybierz system liczbowy (2 - dwojkowy, 16 - szesnastkowy): ")
 
