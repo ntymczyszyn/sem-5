@@ -6,7 +6,7 @@ import random
 frequency = 0.005  # Frequency of the signal (cycles per second)
 amplitude = 1.0  # Amplitude of the signal
 duration = 1000.0  # Duration of the signal (seconds)
-sampling_frequency = 0.15  # Sampling frequency (samples per second)
+sampling_frequency = 0.8  # Sampling frequency (samples per second)
 
 # time vector
 t = np.linspace(0, duration, int(sampling_frequency * duration), endpoint=False) # <class 'numpy.ndarray'>
@@ -15,12 +15,12 @@ N = len(t)
 triangular_signal = amplitude * (2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1)
 # test = 2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1
 
-c = 5
+c = 2
 noise = [ c *(random.random() + random.random() - 1) for _ in range(N)]
 triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
 
 # plot H - MSE(H)
-max = 10
+max = 100
 H = [i for i in range(2,max + 1)]
 MSE = np.zeros(len(H))
 for m in range(len(H)):
@@ -34,9 +34,8 @@ for m in range(len(H)):
     estimated_Q =[ local_Q_sum[i]/(H[m]) if (i > H[m]) else triangular_signal_with_noise[i]  for i in range(N)]
 
     for i in range(H[m], N): # od H do N
-        MSE[m] += (triangular_signal_with_noise[i] - estimated_Q[i])**2
+        MSE[m] += (estimated_Q[i] - triangular_signal[i])**2
     MSE[m] = MSE[m]/(N - H[m])
-
 
 plt.figure()
 plt.scatter(H, MSE, c='b', marker='o')
@@ -62,22 +61,25 @@ plt.show()
 # plt.scatter(t, triangular_signal_with_noise, c='g')
 # plt.show()
 # # -------------------------------------------------------------
-# fig, axs = plt.subplots(1, 2, figsize=(14, 5))
-# axs[0].plot(t, triangular_signal, c='r')
-# axs[0].plot(t, estimated_Q, c='b', marker='o')
-# axs[0].scatter(t, triangular_signal_with_noise, c='g')
-# axs[0].set_title('Triangular Wave with the estimate')
+fig, axs = plt.subplots(1, 2, figsize=(14, 5))
+axs[0].plot(t, triangular_signal, c='r')
+axs[0].plot(t, estimated_Q, c='b', marker='o')
+axs[0].scatter(t, triangular_signal_with_noise, c='g')
+axs[0].set_title('Triangular Wave with the estimate')
+axs[0].set_xlabel('Time')
+axs[0].set_ylabel('Amplitude')
 
 # axs[1].plot(t, estimated_Q, c='b')
 # axs[1].plot(t, triangular_signal_with_noise, c='g')
 # axs[1].set_title('Noisy Triangular Wave and the estimate')
-
-# axs[0].set_xlabel('Time')
-# axs[0].set_ylabel('Amplitude')
+axs[1].scatter(H, MSE, c='b', marker='o')
+axs[1].set_title(f'MSE(H) for c = {c}')
+axs[1].set_xlabel('H')
+axs[1].set_ylabel('MSE')
 # axs[1].set_xlabel('Time')
 # axs[1].set_ylabel('Amplitude')
-# plt.tight_layout()  
-# plt.show()
+plt.tight_layout()  
+plt.show()
 #------------------------------------------------------------
 # theta_circumflex = "\u0302\u03B8*"  # Kombinacja θ (theta) i daszka
 # print(theta_circumflex)
