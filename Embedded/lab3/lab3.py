@@ -36,17 +36,21 @@ def driver():
         if system_choice == 2:
             decimal_to_binary(decimal_number)
             choice = input("Czy podac liczbe w systemie szesnastkowym? (t/n): ")
-        if choice == 'T' or choice == 't':
-            decimal_to_hexadecimal(decimal_number)
-        elif choice != 'N' or choice != 'n':
-            print("Blad! Nieprawidlowy wybor.")
+            if choice == 'T' or choice == 't':
+                decimal_to_hexadecimal(decimal_number)
+            elif choice == 'N' or choice == 'n':
+                return
+            else:
+                print("Blad! Nieprawidlowy wybor.")
         elif system_choice == 16:
             decimal_to_hexadecimal(decimal_number)
             choice = input("Czy podac liczbe w systemie dwojkowym? (t/n): ")
-        if choice == 'T' or choice == 't':
-            decimal_to_binary(decimal_number)
-        elif choice != 'N' or choice != 'n':
-            print("Blad! Nieprawidlowy wybor.")
+            if choice == 'T' or choice == 't':
+                decimal_to_binary(decimal_number)
+            elif choice == 'N' or choice == 'n':
+                return
+            else:
+                print("Blad! Nieprawidlowy wybor.")
         else:
             print("Niepoprawny wybor systemu liczbowego.")
 def main():
