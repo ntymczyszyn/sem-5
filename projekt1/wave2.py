@@ -21,9 +21,9 @@ triangular_signal = amplitude * (2 * np.abs(2 * (t * frequency - np.floor(t * fr
 
 
 # write data to CSV
-output_file = "projekt1/min_data.txt"
-f = open(output_file, 'w')
-f.write("c     min_MSE     min_H       min_var \n")
+# output_file = "projekt1/min_data.txt"
+# f = open(output_file, 'w')
+# f.write("c     min_MSE     min_H       min_var \n")
 
 c = 2
 noise = [ c *(random.random() + random.random() - 1) for _ in range(N)]
@@ -33,7 +33,7 @@ triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(
 min_MSE_H = c
 
 # plot H - MSE(H)
-max = 50
+max = 100
 H = [i for i in range(2,max + 1)]
 min_var = 0
 
@@ -70,7 +70,7 @@ for current_c in range(len(c)):
     
     
 # f.write(f"{c}      {min_MSE}       {min_H}     {min_var} \n")
-f.close()
+# f.close()
 # print(f"Saved min_MSE, min_H, and min_var to {output_file}")   
 
 # Tworzenie wykresu 3D
