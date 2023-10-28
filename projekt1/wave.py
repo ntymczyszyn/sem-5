@@ -6,151 +6,139 @@ import csv
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-# parameters 
-frequency = 0.005  # Frequency of the signal (cycles per second)
-amplitude = 1.0  # Amplitude of the signal
-duration = 1000.0  # Duration of the signal (seconds)
-sampling_frequency = 0.8  # Sampling frequency (samples per second)
+# c = 2
+# noise = [ c *(random.random() + random.random() - 1) for _ in range(N)]
+# triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
+  
+def calculate(N, max, triangular_signal):
+    H = [i for i in range(2,max + 2)]
+    c = np.linspace(0.2, 5.2, max)
+    var = np.zeros(len(c))
+    MSE = np.zeros((len(c), len(H)))
+    MSE_opt = np.zeros(len(c))
+    H_opt = np.zeros(len(c))
+    for current_c in range(len(c)):
+        noise = [ c[current_c] *(random.random() + random.random() - 1) for _ in range(N)]
+        triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
+        min_MSE = 5
+        for current_h in range(len(H)):
+            local_Q_sum = np.zeros(N)
+            for i in range(N):
+                for h in range(H[current_h]):
+                    if i > H[current_h]:
+                        local_Q_sum[i] += triangular_signal_with_noise[i-h] 
 
-# time vector
-t = np.linspace(0, duration, int(sampling_frequency * duration), endpoint=False) # <class 'numpy.ndarray'>
-N = len(t)
-# triangular signal - is it corect computation? 
-triangular_signal = amplitude * (2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1)
-# test = 2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1
+            estimated_Q = np.zeros(N)
+            estimated_Q =[ local_Q_sum[i]/(H[current_h]) if (i > H[current_h]) else triangular_signal[i]  for i in range(N)]
 
+            for i in range(H[current_h], N): # od H do N
+                MSE[current_c][current_h] += (estimated_Q[i] - triangular_signal[i])**2
+            MSE[current_c][current_h] = MSE[current_c][current_h]/(N - H[current_h])
 
-# write data to CSV
-# output_file = "projekt1/min_data.txt"
-# f = open(output_file, 'w')
-# f.write("c     min_MSE     min_H       min_var \n")
+            if MSE[current_c][current_h] < min_MSE:
+                MSE_opt[current_c] = MSE[current_c][current_h]
+                min_MSE = MSE_opt[current_c]
+                H_opt[current_c] = H[current_h]
+                
 
-# Przygotowanie fugur
-fig_MSE, (ax_H, ax_var) = plt.subplots(1, 2, figsize=(10, 4))
-fig = plt.figure()
-ax = fig.add_subplot(111)
-# Tworzenie wykresu 3D
-fig_3d = plt.figure()
-ax0 = fig_3d.add_subplot(111, projection='3d')
-
-c = 2
-noise = [ c *(random.random() + random.random() - 1) for _ in range(N)]
-triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
-
-# minimum value of MSE for H and var
-min_MSE_H = c
-
-# plot H - MSE(H)
-max = 20
-
-min_var = 0
-H = [i for i in range(2,max + 1)]
-c = np.linspace(0.2, 5.2, max)
-var = np.zeros(len(c))
-MSE_H = np.zeros((len(c), len(H)))
-MSE_opt = np.zeros(len(c))
-H_opt = np.zeros(len(c))
-# tswn_optimal = np.zeros(len(c), len(t))
-for current_c in range(len(c)):
-    noise = [ c[current_c] *(random.random() + random.random() - 1) for _ in range(N)]
-    triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
-    min_MSE = 5
-    for current_h in range(len(H)):
-        local_Q_sum = np.zeros(N)
-        for i in range(N):
-            for h in range(H[current_h]):
-                if i > H[current_h]:
-                    local_Q_sum[i] += triangular_signal_with_noise[i-h] 
-
-        estimated_Q = np.zeros(N)
-        estimated_Q =[ local_Q_sum[i]/(H[current_h]) if (i > H[current_h]) else triangular_signal_with_noise[i]  for i in range(N)]
-
-        for i in range(H[current_h], N): # od H do N
-            MSE_H[current_c][current_h] += (estimated_Q[i] - triangular_signal[i])**2
-        MSE_H[current_c][current_h] = MSE_H[current_c][current_h]/(N - H[current_h])
-
-        if MSE_H[current_c][current_h] < min_MSE:
-            MSE_opt[current_c] = MSE_H[current_c][current_h]
-            min_MSE = MSE_opt[current_c]
-            H_opt[current_c] = H[current_h]
+        var[current_c] = 2*(c[current_c]**2)/3 
+        
+        if current_c == max / 10:
+            tswn_optimal = triangular_signal_with_noise
             
-
-    var[current_c] = 2*(c[current_c]**2)/3 
+    return H, MSE, var, H_opt, MSE_opt, tswn_optimal
     
-    if current_c == max / 10:
-        tswn_optimal = triangular_signal_with_noise
-        # Wykres MSE od H
-        ax_H.scatter(H, MSE_H[current_c], color='b', marker='o')
-        ax_H.set_title('Zależność MSE od H')
-        ax_H.set_xlabel('H')
-        ax_H.set_ylabel('MSE')
-    
-    
-    
-# f.write(f"{c}      {min_MSE}       {min_H}     {min_var} \n")
-# f.close()
-# print(f"Saved min_MSE, min_H, and min_var to {output_file}")   
+def main():
+    # parameters 
+    frequency = 0.005  # Frequency of the signal (cycles per second)
+    amplitude = 1.0  # Amplitude of the signal
+    duration = 1000.0  # Duration of the signal (seconds)
+    sampling_frequency = 0.8  # Sampling frequency (samples per second)
+
+    # time vector
+    t = np.linspace(0, duration, int(sampling_frequency * duration), endpoint=False) # <class 'numpy.ndarray'>
+    N = len(t)
+    # triangular signal - is it corect computation? 
+    triangular_signal = amplitude * (2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1)
+    # test = 2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1
+
+    # amount of samples (H and var)
+    max = 20
+
+    # Calculating MSE, H and Var
+    H, MSE, var, H_opt, MSE_opt, tswn_optimal = calculate(N, max, triangular_signal)
+
+    # CREATING FIGURES
+    # Wykres dla szumu
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(t, triangular_signal, c='r') 
+    ax.scatter(t, tswn_optimal, c='b', marker='o')
+    ax.set_title('Triangular Signal')
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Amplitude')
+    # ax.set_ylim(-amplitude - 0.5, amplitude + 0.5)
+
+    # Plot MSE to H and var
+    fig_MSE, (ax_H, ax_var) = plt.subplots(1, 2, figsize=(10, 4))
+    #  H
+    c_value = 5
+    ax_H.scatter(H, MSE[c_value , :], color='b', marker='o')
+    ax_H.set_title(f'Zależność MSE od H dla c = {c_value}')
+    ax_H.set_xlabel('H')
+    ax_H.set_ylabel('MSE')
+    # Var
+    H_value = 2
+    ax_var.scatter(var, MSE[: , 0] , color='r', marker='o')
+    ax_var.set_title(f'Zależność MSE od wariancji dla H = {H_value}')
+    ax_var.set_xlabel('Var')
+    ax_var.set_ylabel('MSE')
+
+    # Zależność optymalnego H od wariancji
+    fig_opt = plt.figure()
+    ax_opt = fig_opt.add_subplot(111)
+    ax_opt.scatter(H_opt, var, c='r')
+    ax_opt.set_title('Horyzont optymalny w zależności od wariancji')
+    ax_opt.set_xlabel('H')
+    ax_opt.set_ylabel('Var')
+
+    # PLOT 3D
+    # Creat 3D plot
+    fig_3d = plt.figure()
+    ax0 = fig_3d.add_subplot(111, projection='3d')
+    ax0.set_title('MSE w zależności od H oraz wariancji')
+    ax0.set_label('Czerwone kropki - wartości optymalne')
+    # Tworzenie współrzędnych X, Y, Z z odpowiednich zmiennych
+    X, Y = np.meshgrid(H, var)
+    Z = MSE
+
+    # Tworzenie wykresu powierzchniowego
+    ax0.scatter(H_opt, var, MSE_opt, c='red', marker='o', s=30)
+
+    # norm = plt.Normalize(Z.min(), Z.max())
+    colors = cm.jet(Z)
+    rcount, ccount, _ = colors.shape
+    surf = ax0.plot_surface(X, Y, Z, rcount=rcount, ccount=ccount,
+                        facecolors=colors, shade=False)
+    surf.set_facecolor((0,0,0,0))
+
+    # Dodawanie etykiet osi
+    ax0.set_xlabel('H')
+    ax0.set_ylabel('var')
+    ax0.set_zlabel('MSE_H')
+
+    # Dodawanie paska kolorów
+    # cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
+
+    # Adjust the spacing between the subplots
+    plt.tight_layout()
 
 
-# Wykres dla szumu
-ax.plot(t, triangular_signal, c='r') 
-ax.scatter(t, tswn_optimal, c='b', marker='o')
-ax.set_title('Triangular Signal')
-ax.set_xlabel('Time (s)')
-ax.set_ylabel('Amplitude')
-# ax.set_ylim(-amplitude - 0.5, amplitude + 0.5) 
-
-# Wykres MSE od wariancji
-ax_var.scatter(var, MSE_opt, color='r', marker='o')
-ax_var.set_title('Zależność MSE od wariancji dla optymalnego H')
-ax_var.set_xlabel('Var')
-ax_var.set_ylabel('MSE')
-
-# WYKRES 3D
-# Tworzenie współrzędnych X, Y, Z z odpowiednich zmiennych
-X, Y = np.meshgrid(H, var)
-Z = MSE_H
-
-# Tworzenie wykresu powierzchniowego
-ax0.scatter(H_opt, var, MSE_opt, c='red', marker='o', s=30)
-
-norm = plt.Normalize(Z.min(), Z.max())
-colors = cm.coolwarm(norm(Z))
-rcount, ccount, _ = colors.shape
-surf = ax0.plot_surface(X, Y, Z, rcount=rcount, ccount=ccount,
-                       facecolors=colors, shade=False)
-surf.set_facecolor((0,0,0,0))
-
-# Dodawanie etykiet osi
-ax0.set_xlabel('H')
-ax0.set_ylabel('var')
-ax0.set_zlabel('MSE_H')
-
-# Dodawanie paska kolorów
-# cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
-
-# Tworzenie wykresów zależności MSE od H i var
+    # Wyświetlenie wykresu
+    plt.show()
 
 
-# # Plot data on the first subplot (ax1)
-# ax_H.scatter(MSE_opt, H_opt, color='b', marker='o')
-# ax_H.set_title('Zależność MSE od optymalnego H')
-# ax_H.set_xlabel('H')
-# ax_H.set_ylabel('MSE')
-
-# # Plot data on the second subplot (ax2)
-# ax_var.scatter(MSE_opt, var, color='r', marker='o')
-# ax_var.set_title('Zależność MSE od wariancji')
-# ax_var.set_xlabel('Var')
-# ax_var.set_ylabel('MSE')
-
-# Adjust the spacing between the subplots
-plt.tight_layout()
-
-
-# Wyświetlenie wykresu
-plt.show()
-
+main()
 """
 plt.figure(1)
 plt.scatter(H, MSE_H, c='b', marker='o')
