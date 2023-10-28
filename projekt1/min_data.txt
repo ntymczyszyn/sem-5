@@ -1,1 +1,0 @@
-c     min_MSE     min_H       min_var 
