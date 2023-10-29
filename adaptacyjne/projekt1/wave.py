@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-import csv
-
+import os
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
@@ -49,104 +48,91 @@ def calculate(N, max, triangular_signal):
     return H, MSE, var, H_opt, MSE_opt, tswn_optimal
     
 def main():
-    # parameters 
+    # triangular function parameters 
     frequency = 0.005  # Frequency of the signal (cycles per second)
+    period = 1 / frequency
     amplitude = 1.0  # Amplitude of the signal
     duration = 1000.0  # Duration of the signal (seconds)
-    sampling_frequency = 0.8  # Sampling frequency (samples per second)
+    sampling_frequency = 0.3  # Sampling frequency (samples per second)
 
     # time vector
     t = np.linspace(0, duration, int(sampling_frequency * duration), endpoint=False) # <class 'numpy.ndarray'>
     N = len(t)
-    # triangular signal - is it corect computation? 
-    triangular_signal = amplitude * (2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1)
-    # test = 2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1
-
+    # triangular_signal = amplitude * (2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1)
+    triangular_signal = ((4 * amplitude) / period) * np.abs(((t - (period * 0.25))%period) - (period * 0.5)) - amplitude
+    
     # amount of samples (H and var)
-    max = 100
+    max = 10
 
-    # Calculating MSE, H and Var
+    # calculating MSE, H and var
     H, MSE, var, H_opt, MSE_opt, tswn_optimal = calculate(N, max, triangular_signal)
 
-    # CREATING FIGURES
-    # Wykres dla szumu
-    fig = plt.figure()
+    # creating plots
+    # signal w/ and wo/ noise
+    fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111)
     ax.plot(t, triangular_signal, c='r') 
     ax.scatter(t, tswn_optimal, c='b', marker='o', s=10)
-    ax.set_title('Triangular Signal')
+    ax.set_title(f'Triangular Signal samples = {duration * sampling_frequency}')
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Amplitude')
     # ax.set_ylim(-amplitude - 0.5, amplitude + 0.5)
 
-    # Plot MSE to H and var
-    fig_MSE, (ax_H, ax_var) = plt.subplots(1, 2, figsize=(10, 4))
+    # MSE(H) and MSE(var) plots
+    fig_MSE, (ax_H, ax_var) = plt.subplots(1, 2, figsize=(12, 6))
     #  H
     c_value = 5
     ax_H.scatter(H, MSE[c_value , :], color='b', marker='o', s=10)
     ax_H.set_title(f'Dependence of MSE on H for c = {c_value}')
     ax_H.set_xlabel('Horizon')
     ax_H.set_ylabel('MSE')
-    # Var
+    # var
     H_value = 2
     ax_var.scatter(var, MSE[: , 0] , color='r', marker='o', s=10)
     ax_var.set_title(f'Dependence of MSE on variance for H = {H_value}')
     ax_var.set_xlabel('Variance')
     ax_var.set_ylabel('MSE')
 
-    # Zależność optymalnego H od wariancji
-    fig_opt = plt.figure()
+    # Var(H opt) - CZY TO NIE POWINNO BYĆ NA ODWRÓT Hopt(var) ??
+    fig_opt = plt.figure(figsize=(6, 6))
     ax_opt = fig_opt.add_subplot(111)
     ax_opt.scatter(H_opt, var, c='r')
     ax_opt.set_title('Optimal Horizon depending on variance')
     ax_opt.set_xlabel('Horizon')
     ax_opt.set_ylabel('Variance')
 
-    # PLOT 3D
-    # Creat 3D plot
-    fig_3d = plt.figure()
+    # 3d plot - H, var, MSE(h) + h opt for all calculated var
+    fig_3d = plt.figure(figsize=(6, 6))
     ax0 = fig_3d.add_subplot(111, projection='3d')
-    ax0.set_title('Dependence of MSE on H and variance')
-    ax0.set_label('Czerwone kropki - wartości optymalne')
-    # Tworzenie współrzędnych X, Y, Z z odpowiednich zmiennych
     X, Y = np.meshgrid(H, var)
     Z = MSE
 
-    # Tworzenie wykresu powierzchniowego
+    # optimal horizon plot
     ax0.scatter(H_opt, var, MSE_opt, c='red', marker='o', s=10)
 
     # norm = plt.Normalize(Z.min(), Z.max())
     colors = cm.rainbow(Z)
     rcount, ccount, _ = colors.shape
-    surf = ax0.plot_surface(X, Y, Z, rcount=rcount, ccount=ccount,
-                        facecolors=colors, shade=False)
+    surf = ax0.plot_surface(X, Y, Z, rcount=rcount, ccount=ccount, facecolors=colors, shade=False)
     surf.set_facecolor((0,0,0,0))
+    # cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
 
-    # Dodawanie etykiet osi
     ax0.set_xlabel('Horizon')
     ax0.set_ylabel('Variance')
     ax0.set_zlabel('MSE')
+    ax0.set_title('Dependence of MSE on H and variance')
+    ax0.set_label('Czerwone kropki - wartości optymalne')
 
-    # Dodawanie paska kolorów
-    # cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
-
-    # Adjust the spacing between the subplots
     plt.tight_layout()
+    fig.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_szumu.png"), dpi=500)
+    fig_3d.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_3d.png"), dpi=500)
+    fig_opt.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_opt.png"), dpi=500)
+    fig_MSE.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_MSE.png"), dpi=500)
 
-    fig.set_size_inches(6, 6)
-    fig_3d.set_size_inches(6, 6)
-    fig_opt.set_size_inches(6, 6)
-    fig_MSE.set_size_inches(12, 6)
-    fig.savefig('projekt1\images\Wykres_szumu.png', dpi=500)
-    fig_3d.savefig('projekt1\images\Wykres_3d.png', dpi=500)
-    fig_opt.savefig('projekt1\images\Wykres_opt.png', dpi=500)
-    fig_MSE.savefig('projekt1\images\Wykres_MSE.png', dpi=500)
-
-    # Wyświetlenie wykresu
     # plt.show()
 
-
-main()
+if __name__ == "__main__":
+    main()
 """
 plt.figure(1)
 plt.scatter(H, MSE_H, c='b', marker='o')
@@ -202,7 +188,4 @@ axs[1].set_ylabel('MSE')
 # axs[1].set_ylabel('Amplitude')
 plt.tight_layout()  
 plt.show()
-#------------------------------------------------------------
-# theta_circumflex = "\u0302\u03B8*"  # Kombinacja θ (theta) i daszka
-# print(theta_circumflex)
 """
