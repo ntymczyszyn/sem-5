@@ -83,49 +83,49 @@ def main():
     fig_MSE, (ax_H, ax_var) = plt.subplots(1, 2, figsize=(10, 4))
     #  H
     c_value = 5
-    ax_H.scatter(H, MSE[c_value , :], color='b', marker='o')
-    ax_H.set_title(f'Zależność MSE od H dla c = {c_value}')
-    ax_H.set_xlabel('H')
+    ax_H.scatter(H, MSE[c_value , :], color='b', marker='o', s=10)
+    ax_H.set_title(f'Dependence of MSE on H for c = {c_value}')
+    ax_H.set_xlabel('Horizon')
     ax_H.set_ylabel('MSE')
     # Var
     H_value = 2
-    ax_var.scatter(var, MSE[: , 0] , color='r', marker='o')
-    ax_var.set_title(f'Zależność MSE od wariancji dla H = {H_value}')
-    ax_var.set_xlabel('Var')
+    ax_var.scatter(var, MSE[: , 0] , color='r', marker='o', s=10)
+    ax_var.set_title(f'Dependence of MSE on variance for H = {H_value}')
+    ax_var.set_xlabel('Variance')
     ax_var.set_ylabel('MSE')
 
     # Zależność optymalnego H od wariancji
     fig_opt = plt.figure()
     ax_opt = fig_opt.add_subplot(111)
     ax_opt.scatter(H_opt, var, c='r')
-    ax_opt.set_title('Horyzont optymalny w zależności od wariancji')
-    ax_opt.set_xlabel('H')
-    ax_opt.set_ylabel('Var')
+    ax_opt.set_title('Optimal Horizon depending on variance')
+    ax_opt.set_xlabel('Horizon')
+    ax_opt.set_ylabel('Variance')
 
     # PLOT 3D
     # Creat 3D plot
     fig_3d = plt.figure()
     ax0 = fig_3d.add_subplot(111, projection='3d')
-    ax0.set_title('MSE w zależności od H oraz wariancji')
+    ax0.set_title('Dependence of MSE on H and variance')
     ax0.set_label('Czerwone kropki - wartości optymalne')
     # Tworzenie współrzędnych X, Y, Z z odpowiednich zmiennych
     X, Y = np.meshgrid(H, var)
     Z = MSE
 
     # Tworzenie wykresu powierzchniowego
-    ax0.scatter(H_opt, var, MSE_opt, c='red', marker='o', s=30)
+    ax0.scatter(H_opt, var, MSE_opt, c='red', marker='o', s=10)
 
     # norm = plt.Normalize(Z.min(), Z.max())
-    colors = cm.jet(Z)
+    colors = cm.rainbow(Z)
     rcount, ccount, _ = colors.shape
     surf = ax0.plot_surface(X, Y, Z, rcount=rcount, ccount=ccount,
                         facecolors=colors, shade=False)
     surf.set_facecolor((0,0,0,0))
 
     # Dodawanie etykiet osi
-    ax0.set_xlabel('H')
-    ax0.set_ylabel('var')
-    ax0.set_zlabel('MSE_H')
+    ax0.set_xlabel('Horizon')
+    ax0.set_ylabel('Variance')
+    ax0.set_zlabel('MSE')
 
     # Dodawanie paska kolorów
     # cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
@@ -133,12 +133,17 @@ def main():
     # Adjust the spacing between the subplots
     plt.tight_layout()
 
-    fig.savefig('projekt1\images\Wykres_szumu.png', dpi=300)
-    # fig_3d.savefig('projekt1\images\Wykres_3d.png', dpi=300)
-    # fig_opt.savefig('projekt1\images\Wykres_opt.png', dpi=300)
+    fig.set_size_inches(6, 6)
+    fig_3d.set_size_inches(6, 6)
+    fig_opt.set_size_inches(6, 6)
+    fig_MSE.set_size_inches(12, 6)
+    fig.savefig('projekt1\images\Wykres_szumu.png', dpi=500)
+    fig_3d.savefig('projekt1\images\Wykres_3d.png', dpi=500)
+    fig_opt.savefig('projekt1\images\Wykres_opt.png', dpi=500)
+    fig_MSE.savefig('projekt1\images\Wykres_MSE.png', dpi=500)
 
     # Wyświetlenie wykresu
-    plt.show()
+    # plt.show()
 
 
 main()
