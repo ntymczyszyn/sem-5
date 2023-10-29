@@ -63,7 +63,7 @@ def main():
     # test = 2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1
 
     # amount of samples (H and var)
-    max = 20
+    max = 100
 
     # Calculating MSE, H and Var
     H, MSE, var, H_opt, MSE_opt, tswn_optimal = calculate(N, max, triangular_signal)
@@ -73,7 +73,7 @@ def main():
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(t, triangular_signal, c='r') 
-    ax.scatter(t, tswn_optimal, c='b', marker='o')
+    ax.scatter(t, tswn_optimal, c='b', marker='o', s=10)
     ax.set_title('Triangular Signal')
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Amplitude')
@@ -133,6 +133,9 @@ def main():
     # Adjust the spacing between the subplots
     plt.tight_layout()
 
+    fig.savefig('projekt1\images\Wykres_szumu.png', dpi=300)
+    # fig_3d.savefig('projekt1\images\Wykres_3d.png', dpi=300)
+    # fig_opt.savefig('projekt1\images\Wykres_opt.png', dpi=300)
 
     # Wyświetlenie wykresu
     plt.show()
