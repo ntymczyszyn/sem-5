@@ -2,49 +2,44 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import os
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-# c = 2
-# noise = [ c *(random.random() + random.random() - 1) for _ in range(N)]
-# triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
-  
+# number of samples, max h, expected signal 
 def calculate(N, max, triangular_signal):
     H = [i for i in range(2,max + 2)]
-    c = np.linspace(0.2, 5.2, max)
+    c = np.linspace(0.2, 5.2, max) # numbers chosen arbitrarily
     var = np.zeros(len(c))
     MSE = np.zeros((len(c), len(H)))
     MSE_opt = np.zeros(len(c))
     H_opt = np.zeros(len(c))
     for current_c in range(len(c)):
+        # max value that MSE can be - for finding H opt
+        min_MSE = 5
         noise = [ c[current_c] *(random.random() + random.random() - 1) for _ in range(N)]
         triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
-        min_MSE = 5
+        var[current_c] = 2*(c[current_c]**2)/3 
+        # do zmiany?
+        if current_c == max / 10:
+            tswn_optimal = triangular_signal_with_noise
+
         for current_h in range(len(H)):
             local_Q_sum = np.zeros(N)
             for i in range(N):
                 for h in range(H[current_h]):
                     if i > H[current_h]:
                         local_Q_sum[i] += triangular_signal_with_noise[i-h] 
-
             estimated_Q = np.zeros(N)
             estimated_Q =[ local_Q_sum[i]/(H[current_h]) if (i > H[current_h]) else triangular_signal[i]  for i in range(N)]
 
-            for i in range(H[current_h], N): # od H do N
+            for i in range(H[current_h], N): # from H till N
                 MSE[current_c][current_h] += (estimated_Q[i] - triangular_signal[i])**2
             MSE[current_c][current_h] = MSE[current_c][current_h]/(N - H[current_h])
-
+            # serching for min MSE for each var
             if MSE[current_c][current_h] < min_MSE:
                 MSE_opt[current_c] = MSE[current_c][current_h]
                 min_MSE = MSE_opt[current_c]
                 H_opt[current_c] = H[current_h]
-                
-
-        var[current_c] = 2*(c[current_c]**2)/3 
-        
-        if current_c == max / 10:
-            tswn_optimal = triangular_signal_with_noise
-            
+                  
     return H, MSE, var, H_opt, MSE_opt, tswn_optimal
     
 def main():
@@ -54,28 +49,26 @@ def main():
     amplitude = 1.0  # Amplitude of the signal
     duration = 1000.0  # Duration of the signal (seconds)
     sampling_frequency = 0.3  # Sampling frequency (samples per second)
-
     # time vector
     t = np.linspace(0, duration, int(sampling_frequency * duration), endpoint=False) # <class 'numpy.ndarray'>
     N = len(t)
     # triangular_signal = amplitude * (2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1)
     triangular_signal = ((4 * amplitude) / period) * np.abs(((t - (period * 0.25))%period) - (period * 0.5)) - amplitude
-    
     # amount of samples (H and var)
     max = 10
-
     # calculating MSE, H and var
     H, MSE, var, H_opt, MSE_opt, tswn_optimal = calculate(N, max, triangular_signal)
-
     # creating plots
     # signal w/ and wo/ noise
-    fig = plt.figure(figsize=(6, 6))
-    ax = fig.add_subplot(111)
-    ax.plot(t, triangular_signal, c='r') 
-    ax.scatter(t, tswn_optimal, c='b', marker='o', s=10)
-    ax.set_title(f'Triangular Signal samples = {duration * sampling_frequency}')
-    ax.set_xlabel('Time (s)')
-    ax.set_ylabel('Amplitude')
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111) # TE NAZWY SĄ DO ZMIANY !
+    # TRZEBABY JESZCZE POKAZAĆ TEN ESTYMOWANY SYGNAŁ(?)
+    ax.plot(t, triangular_signal, c='r', label="Fala trójkątna") 
+    ax.scatter(t, tswn_optimal, c='b', marker='o', s=10, label="Zaszumiona fala trójkątna")
+    ax.set_title(f'Fala trójkątna')
+    ax.legend(loc='upper right')
+    ax.set_xlabel('Czas (s)')
+    ax.set_ylabel('Amplituda')
     # ax.set_ylim(-amplitude - 0.5, amplitude + 0.5)
 
     # MSE(H) and MSE(var) plots
@@ -83,32 +76,32 @@ def main():
     #  H
     c_value = 5
     ax_H.scatter(H, MSE[c_value , :], color='b', marker='o', s=10)
-    ax_H.set_title(f'Dependence of MSE on H for c = {c_value}')
-    ax_H.set_xlabel('Horizon')
-    ax_H.set_ylabel('MSE')
+    ax_H.set_title(f'Zależność MSE(H) dla var ={(2 * (c_value**2)) / 3}')
+    ax_H.set_xlabel('Horyzont pamięci')
+    ax_H.set_ylabel('MSE(H)')
     # var
     H_value = 2
     ax_var.scatter(var, MSE[: , 0] , color='r', marker='o', s=10)
-    ax_var.set_title(f'Dependence of MSE on variance for H = {H_value}')
-    ax_var.set_xlabel('Variance')
+    ax_var.set_title(f'Zależność MSE(H) przy różnych wariacjach dla H = {H_value}')
+    ax_var.set_xlabel('Wariancja')
     ax_var.set_ylabel('MSE')
 
     # Var(H opt) - CZY TO NIE POWINNO BYĆ NA ODWRÓT Hopt(var) ??
-    fig_opt = plt.figure(figsize=(6, 6))
+    fig_opt = plt.figure(figsize=(8, 6))
     ax_opt = fig_opt.add_subplot(111)
-    ax_opt.scatter(H_opt, var, c='r')
-    ax_opt.set_title('Optimal Horizon depending on variance')
-    ax_opt.set_xlabel('Horizon')
-    ax_opt.set_ylabel('Variance')
+    ax_opt.scatter(var, H_opt,  c='r') # ZAMIENIŁAM TUTAJ KOLEJNOŚĆ!!
+    ax_opt.set_title('H optymalne(wariancja)')
+    ax_opt.set_ylabel('Optymalny horyzont pamięci')
+    ax_opt.set_xlabel('Wariancja')
 
     # 3d plot - H, var, MSE(h) + h opt for all calculated var
-    fig_3d = plt.figure(figsize=(6, 6))
+    fig_3d = plt.figure(figsize=(8, 6))
     ax0 = fig_3d.add_subplot(111, projection='3d')
     X, Y = np.meshgrid(H, var)
     Z = MSE
 
     # optimal horizon plot
-    ax0.scatter(H_opt, var, MSE_opt, c='red', marker='o', s=10)
+    ax0.scatter(H_opt, var, MSE_opt, c='black', marker='o', s=20, label="H opt(var)")
 
     # norm = plt.Normalize(Z.min(), Z.max())
     colors = cm.rainbow(Z)
@@ -117,11 +110,11 @@ def main():
     surf.set_facecolor((0,0,0,0))
     # cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
 
-    ax0.set_xlabel('Horizon')
-    ax0.set_ylabel('Variance')
-    ax0.set_zlabel('MSE')
-    ax0.set_title('Dependence of MSE on H and variance')
-    ax0.set_label('Czerwone kropki - wartości optymalne')
+    ax0.set_xlabel('Horyzont pamięci')
+    ax0.set_ylabel('Wariancja')
+    ax0.set_zlabel('MSE(H)')
+    ax0.set_title('MSE(H) dla róznych wariancji')
+    ax0.legend(loc='center left', bbox_to_anchor=(1, 1))
 
     plt.tight_layout()
     fig.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_szumu.png"), dpi=500)
