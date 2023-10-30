@@ -7,7 +7,7 @@ from matplotlib import cm
 # number of samples, max h, expected signal 
 def calculate_all(N, max, triangular_signal):
     H = [i for i in range(2,max + 2)]
-    c = np.linspace(0.2, 5.2, max) # numbers chosen arbitrarily
+    c = np.linspace(0.05, 2.05, max) # numbers chosen arbitrarily
     var = np.zeros(len(c))
     MSE = np.zeros((len(c), len(H)))
     MSE_opt = np.zeros(len(c))
@@ -53,7 +53,7 @@ def estimate(triangular_signal, N, c, H):
     for i in range(H, N): # od H do N
         MSE += (triangular_signal_with_noise[i] - estimated[i])**2
     MSE = MSE/(N - H)
-    return triangular_signal_with_noise, estimated, MSE
+    return triangular_signal_with_noise, estimated
 
 def main():
     # triangular function parameters 
@@ -68,10 +68,14 @@ def main():
     # triangular_signal = amplitude * (2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1)
     triangular_signal = ((4 * amplitude) / period) * np.abs(((t - (period * 0.25))%period) - (period * 0.5)) - amplitude
     # amount of samples (H and var)
-    max = 10
+    max = 80
+    c_value = 1
+    H_value = 4
     # calculating MSE, H and var
-    H, MSE, var, H_opt, MSE_opt = calculate_all(N, max, triangular_signal)
-    t_w_n, est, MSE_ = estimate(triangular_signal, N, c=5, H=10)
+    # H, MSE, var, H_opt, MSE_opt = calculate_all(N, max, triangular_signal)
+    t_w_n, est = estimate(triangular_signal, N, c=c_value, H=H_value)
+
+
     # creating plots
     # signal w/ and wo/ noise
     fig = plt.figure(figsize=(10, 8))
@@ -85,6 +89,7 @@ def main():
     ax.set_xlabel('Czas (s)')
     ax.set_ylabel('Amplituda')
     # ax.set_ylim(-amplitude - 0.5, amplitude + 0.5)
+
     fig_est = plt.figure(figsize=(10,8))
     ax_est = fig_est.add_subplot(111)
     ax_est.plot(t, triangular_signal, c='r', label="Fala trójkątna") 
@@ -95,6 +100,7 @@ def main():
     ax_est.set_xlabel('Czas (s)')
     ax_est.set_ylabel('Amplituda')
 
+    """
     # MSE(H) and MSE(var) plots
     fig_MSE, (ax_H, ax_var) = plt.subplots(1, 2, figsize=(12, 6))
     #  H
@@ -131,7 +137,7 @@ def main():
     colors = cm.rainbow(Z)
     rcount, ccount, _ = colors.shape
     surf = ax0.plot_surface(X, Y, Z, rcount=rcount, ccount=ccount, facecolors=colors, shade=False)
-    # surf.set_facecolor((0,0,0,0))
+    surf.set_facecolor((0,0,0,0))
     # cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
 
     ax0.set_xlabel('Horyzont pamięci')
@@ -141,11 +147,14 @@ def main():
     ax0.legend(loc='center left', bbox_to_anchor=(1, 1))
 
     plt.tight_layout()
-    fig.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_szumu.png"), dpi=500)
-    fig_est.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_estymowany.png"), dpi=500)
-    fig_3d.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_3d.png"), dpi=500)
-    fig_opt.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_opt.png"), dpi=500)
-    fig_MSE.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_MSE.png"), dpi=500)
+    """
+    fig.savefig(os.path.join(os.path.dirname(__file__), "estimate", f"Szum_c={c_value}__H={H_value}.png"), dpi=500)
+    fig_est.savefig(os.path.join(os.path.dirname(__file__), "estimate", f"Est_c={c_value}__H={H_value}.png"), dpi=500)
+    # fig.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_szumu.png"), dpi=500)
+    # fig_est.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_estymowany.png"), dpi=500)
+    # fig_3d.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_3d.png"), dpi=500)
+    # fig_opt.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_opt.png"), dpi=500)
+    # fig_MSE.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_MSE.png"), dpi=500)
 
     # plt.show()
 
