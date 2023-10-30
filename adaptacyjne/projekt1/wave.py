@@ -57,7 +57,7 @@ def estimate(triangular_signal, N, c, H):
 
 def main():
     # triangular function parameters 
-    frequency = 0.005  # Frequency of the signal (cycles per second)
+    frequency = 0.01  # Frequency of the signal (cycles per second)
     period = 1 / frequency
     amplitude = 1.0  # Amplitude of the signal
     duration = 1000.0  # Duration of the signal (seconds)
@@ -68,10 +68,10 @@ def main():
     # triangular_signal = amplitude * (2 * np.abs(2 * (t * frequency - np.floor(t * frequency + 0.5))) - 1)
     triangular_signal = ((4 * amplitude) / period) * np.abs(((t - (period * 0.25))%period) - (period * 0.5)) - amplitude
     # amount of samples (H and var)
-    max = 50
+    max = 10
     # calculating MSE, H and var
     H, MSE, var, H_opt, MSE_opt = calculate_all(N, max, triangular_signal)
-    t_w_n, est, MSE_ = estimate(triangular_signal, N, c=1, H=10)
+    t_w_n, est, MSE_ = estimate(triangular_signal, N, c=5, H=10)
     # creating plots
     # signal w/ and wo/ noise
     fig = plt.figure(figsize=(10, 8))
