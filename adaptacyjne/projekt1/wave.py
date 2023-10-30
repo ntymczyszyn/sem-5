@@ -5,7 +5,7 @@ import os
 from matplotlib import cm
 
 # number of samples, max h, expected signal 
-def calculate(N, max, triangular_signal):
+def calculate_all(N, max, triangular_signal):
     H = [i for i in range(2,max + 2)]
     c = np.linspace(0.2, 5.2, max) # numbers chosen arbitrarily
     var = np.zeros(len(c))
@@ -18,21 +18,18 @@ def calculate(N, max, triangular_signal):
         noise = [ c[current_c] *(random.random() + random.random() - 1) for _ in range(N)]
         triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
         var[current_c] = 2*(c[current_c]**2)/3 
-        # do zmiany?
-        if current_c == max / 10:
-            tswn_optimal = triangular_signal_with_noise
+
         for current_h in range(len(H)):
-            local_Q_sum = np.zeros(N)
+            local_sum = np.zeros(N)
             for i in range(N):
                 for h in range(H[current_h]):
                     if i > H[current_h]:
-                        local_Q_sum[i] += triangular_signal_with_noise[i-h] 
-            estimated_Q = np.zeros(N)
-            estimated_Q =[ local_Q_sum[i]/(H[current_h]) if (i > H[current_h]) else triangular_signal[i]  for i in range(N)]
-            if current_c == max/10 and current_h == max/10:
-                est_Q = estimated_Q
+                        local_sum[i] += triangular_signal_with_noise[i-h] 
+            estimated = np.zeros(N)
+            estimated =[ local_sum[i]/(H[current_h]) if (i > H[current_h]) else triangular_signal[i]  for i in range(N)]
+           
             for i in range(H[current_h], N): # from H till N
-                MSE[current_c][current_h] += (estimated_Q[i] - triangular_signal[i])**2
+                MSE[current_c][current_h] += (estimated[i] - triangular_signal[i])**2
             MSE[current_c][current_h] = MSE[current_c][current_h]/(N - H[current_h])
             # serching for min MSE for each var
             if MSE[current_c][current_h] < min_MSE:
@@ -40,8 +37,25 @@ def calculate(N, max, triangular_signal):
                 min_MSE = MSE_opt[current_c]
                 H_opt[current_c] = H[current_h]      
         
-    return H, MSE, var, H_opt, MSE_opt, tswn_optimal, est_Q
+    return H, MSE, var, H_opt, MSE_opt
     
+def estimate(triangular_signal, N, c, H):
+    noise = [ c *(random.random() + random.random() - 1) for _ in range(N)]
+    triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
+    MSE = 0
+    local_sum = np.zeros(N)
+    for i in range(N):
+        for h in range(H):
+            if i > H:
+                local_sum[i] += triangular_signal_with_noise[i-h] 
+
+    estimated =[ local_sum[i]/(H) if (i > H) else triangular_signal_with_noise[i]  for i in range(N)]
+
+    for i in range(H, N): # od H do N
+        MSE += (triangular_signal_with_noise[i] - estimated[i])**2
+    MSE = MSE/(N - H)
+    return triangular_signal_with_noise, estimated, MSE
+
 def main():
     # triangular function parameters 
     frequency = 0.005  # Frequency of the signal (cycles per second)
@@ -57,28 +71,21 @@ def main():
     # amount of samples (H and var)
     max = 50
     # calculating MSE, H and var
-    H, MSE, var, H_opt, MSE_opt, tswn_optimal, estimated_Q = calculate(N, max, triangular_signal)
+    H, MSE, var, H_opt, MSE_opt = calculate_all(N, max, triangular_signal)
+    t_w_n, est, MSE_ = estimate(triangular_signal, N, c=1, H=10)
     # creating plots
     # signal w/ and wo/ noise
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111) # TE NAZWY SĄ DO ZMIANY !
     # TRZEBABY JESZCZE POKAZAĆ TEN ESTYMOWANY SYGNAŁ(?)
     ax.plot(t, triangular_signal, c='r', label="Fala trójkątna") 
-    ax.plot(t, estimated_Q, c='b', marker='o', label="Fala estymowana")
-    ax.scatter(t, tswn_optimal, c='g', marker='o', label="Zaszumiona fala trójkątna")
+    ax.plot(t, est, c='b', marker='o', label="Fala estymowana")
+    ax.scatter(t, t_w_n, c='g', marker='o', label="Zaszumiona fala trójkątna")
     ax.set_title(f'Fala trójkątna')
     ax.legend(loc='upper right')
     ax.set_xlabel('Czas (s)')
     ax.set_ylabel('Amplituda')
     # ax.set_ylim(-amplitude - 0.5, amplitude + 0.5)
-    # fig_est = plt.figure(figsize=(10,8))
-    # ax_est = fig_est.add_subplot(111)
-    # ax_est.plot(t, triangular_signal, c='r', label="Fala trójkątna") 
-    # ax_est.plot(t, estimated_Q, c='b', marker='o', label="Fala estymowana")
-    # ax_est.set_title(f'Fala trójkątna')
-    # ax_est.legend(loc='upper right')
-    # ax_est.set_xlabel('Czas (s)')
-    # ax_est.set_ylabel('Amplituda')
 
     # MSE(H) and MSE(var) plots
     fig_MSE, (ax_H, ax_var) = plt.subplots(1, 2, figsize=(12, 6))
@@ -127,7 +134,6 @@ def main():
 
     plt.tight_layout()
     fig.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_szumu.png"), dpi=500)
-    # fig_est.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_estymowane.png"), dpi=500)
     fig_3d.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_3d.png"), dpi=500)
     fig_opt.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_opt.png"), dpi=500)
     fig_MSE.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_MSE.png"), dpi=500)
