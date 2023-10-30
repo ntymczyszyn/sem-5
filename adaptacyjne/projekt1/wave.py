@@ -149,7 +149,7 @@ def images_signal(t, triangular_signal, N, c_value, H_value, amplitude):
 
 def main():
     # triangular function parameters 
-    frequency = 0.005  # Frequency of the signal (cycles per second)
+    frequency = 0.01  # Frequency of the signal (cycles per second)
     period = 1 / frequency
     amplitude = 1.0  # Amplitude of the signal
     duration = 1000.0  # Duration of the signal (seconds)
