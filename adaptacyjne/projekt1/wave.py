@@ -14,12 +14,11 @@ def calculate_all(N, max, triangular_signal):
     H_opt = np.zeros(len(c))
     for current_c in range(len(c)):
         # max value that MSE can be - for finding H opt
-        min_MSE = 5
-        noise = [ c[current_c] *(random.random() + random.random() - 1) for _ in range(N)]
-        triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
+        min_MSE = 5    
         var[current_c] = 2*(c[current_c]**2)/3 
-
         for current_h in range(len(H)):
+            noise = [ c[current_c] *(random.random() + random.random() - 1) for _ in range(N)]
+            triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
             local_sum = np.zeros(N)
             for i in range(N):
                 for h in range(H[current_h]):
@@ -62,7 +61,7 @@ def main():
     period = 1 / frequency
     amplitude = 1.0  # Amplitude of the signal
     duration = 1000.0  # Duration of the signal (seconds)
-    sampling_frequency = 0.3  # Sampling frequency (samples per second)
+    sampling_frequency = 0.7  # Sampling frequency (samples per second)
     # time vector
     t = np.linspace(0, duration, int(sampling_frequency * duration), endpoint=False) # <class 'numpy.ndarray'>
     N = len(t)
@@ -79,13 +78,22 @@ def main():
     ax = fig.add_subplot(111) # TE NAZWY SĄ DO ZMIANY !
     # TRZEBABY JESZCZE POKAZAĆ TEN ESTYMOWANY SYGNAŁ(?)
     ax.plot(t, triangular_signal, c='r', label="Fala trójkątna") 
-    ax.plot(t, est, c='b', marker='o', label="Fala estymowana")
+    # ax.plot(t, est, c='b', marker='o', label="Fala estymowana")
     ax.scatter(t, t_w_n, c='g', marker='o', label="Zaszumiona fala trójkątna")
     ax.set_title(f'Fala trójkątna')
     ax.legend(loc='upper right')
     ax.set_xlabel('Czas (s)')
     ax.set_ylabel('Amplituda')
     # ax.set_ylim(-amplitude - 0.5, amplitude + 0.5)
+    fig_est = plt.figure(figsize=(10,8))
+    ax_est = fig_est.add_subplot(111)
+    ax_est.plot(t, triangular_signal, c='r', label="Fala trójkątna") 
+    ax_est.plot(t, est, c='b', marker='o', label="Fala estymowana")
+    # ax_est.scatter(t, t_w_n, c='g', marker='o', label="Zaszumiona fala trójkątna")
+    ax_est.set_title(f'Fala trójkątna')
+    ax_est.legend(loc='upper right')
+    ax_est.set_xlabel('Czas (s)')
+    ax_est.set_ylabel('Amplituda')
 
     # MSE(H) and MSE(var) plots
     fig_MSE, (ax_H, ax_var) = plt.subplots(1, 2, figsize=(12, 6))
@@ -105,7 +113,7 @@ def main():
     # Var(H opt) - CZY TO NIE POWINNO BYĆ NA ODWRÓT Hopt(var) ?? 
     fig_opt = plt.figure(figsize=(8, 6))
     ax_opt = fig_opt.add_subplot(111)
-    ax_opt.scatter(var, H_opt,  c='r') # ZAMIENIŁAM TUTAJ KOLEJNOŚĆ!!
+    ax_opt.scatter(var, H_opt,  c='r', s=10) # ZAMIENIŁAM TUTAJ KOLEJNOŚĆ!!
     ax_opt.set_title('H optymalne(wariancja)')
     ax_opt.set_ylabel('Optymalny horyzont pamięci')
     ax_opt.set_xlabel('Wariancja')
@@ -123,7 +131,7 @@ def main():
     colors = cm.rainbow(Z)
     rcount, ccount, _ = colors.shape
     surf = ax0.plot_surface(X, Y, Z, rcount=rcount, ccount=ccount, facecolors=colors, shade=False)
-    surf.set_facecolor((0,0,0,0))
+    # surf.set_facecolor((0,0,0,0))
     # cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
 
     ax0.set_xlabel('Horyzont pamięci')
@@ -134,6 +142,7 @@ def main():
 
     plt.tight_layout()
     fig.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_szumu.png"), dpi=500)
+    fig_est.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_estymowany.png"), dpi=500)
     fig_3d.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_3d.png"), dpi=500)
     fig_opt.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_opt.png"), dpi=500)
     fig_MSE.savefig(os.path.join(os.path.dirname(__file__), "images", "Wykres_MSE.png"), dpi=500)
