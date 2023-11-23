@@ -3,157 +3,150 @@ import numpy as np
 import random
 import os
 from matplotlib import cm
- 
 
-# number of samples, max h, expected signal 
-def calculate_all(N, max, triangular_signal):
-    H = [i for i in range(2,max + 2)]
-    c = np.linspace(0.05, 1.05, max) 
-    var = np.zeros(len(c))
-    MSE = np.zeros((len(c), len(H)))
-    MSE_opt = np.zeros(len(c))
-    H_opt = np.zeros(len(c))
-    for current_c in range(len(c)):
-        # max value that MSE can be - for finding H opt
-        min_MSE = 5    
-        var[current_c] = 2*(c[current_c]**2)/3 
-        for current_h in range(len(H)):
-            noise = [ c[current_c] *(random.random() + random.random() - 1) for _ in range(N)]
-            triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
-            local_sum = np.zeros(N)
-            for i in range(N):
-                for h in range(H[current_h]):
-                    if i > H[current_h]:
-                        local_sum[i] += triangular_signal_with_noise[i-h] 
-            estimated = np.zeros(N)
-            estimated =[ local_sum[i]/(H[current_h]) if (i > H[current_h]) else triangular_signal_with_noise[i]  for i in range(N)]
-           
-            for i in range(H[current_h], N): # from H till N
-                MSE[current_c][current_h] += (estimated[i] - triangular_signal[i])**2
-            MSE[current_c][current_h] = MSE[current_c][current_h]/(N - H[current_h])
-            # serching for min MSE for each var
-            if MSE[current_c][current_h] < min_MSE:
-                MSE_opt[current_c] = MSE[current_c][current_h]
-                min_MSE = MSE_opt[current_c]
-                H_opt[current_c] = H[current_h]      
-        
-    return H, MSE, var, H_opt, MSE_opt
-     
-def estimate(triangular_signal, N, c, H):
-    noise = [ c *(random.random() + random.random() - 1) for _ in range(N)]
-    triangular_signal_with_noise = [triangular_signal[i] + noise[i]  for i in range(N)]
-    MSE = 0
-    local_sum = np.zeros(N)
-    for i in range(N):
-        for h in range(H):
-            if i > H:
-                local_sum[i] += triangular_signal_with_noise[i-h] 
-    estimated = np.zeros(N)
-    estimated =[ local_sum[i]/(H) if (i > H) else triangular_signal_with_noise[i]  for i in range(N)]
-
-    for i in range(H, N): # od H do N
-        MSE += (estimated[i] - triangular_signal[i])**2
-    MSE = MSE/(N - H)
-    return triangular_signal_with_noise, estimated, MSE
-
-def preparing_data(signal, t):
+def preparing_data(signal_IN, t, b_true):
     N = len(t)
-    b_0, b_1, b_2 = 1, 1, 1
-    b_true = [b_0, b_1, b_2] # powinna być macierz pionowa, ale nie chce mi sie tego komplikować po adekwatność do zadania, jak kod działa tak samo
- 
-    V_k = np.zeros(N)
-    signal_with_noise = np.zeros(N)
-    for k in range(N):
-        if( k >= 2):
-            noise = [ 0.5 *(random.random() + random.random() - 1) for _ in range(N)]
-            V_k[k] = 1/3 * (b_true[0]*signal[k] + b_true[1]*signal[k-1] + b_true[2]*signal[k-2])
-            signal_with_noise[k] = V_k[k] + noise[k]
+    V_true = np.zeros(N)
+    signal_OUT = np.zeros(N)
+    for k in range(2, N):
+        # True variables, that we get
+        # triangular noise
+        noise = [ 8 *(random.random() + random.random() - 1) for _ in range(N)]
+        # Signal without noise
+        V_true[k] =  (b_true[0]*signal_IN[k] + b_true[1]*signal_IN[k-1] + b_true[2]*signal_IN[k-2])
+        # Output signal
+        signal_OUT[k] = V_true[k] + noise[k]
+    return signal_OUT, V_true
 
-    fig = plt.figure(figsize=(14, 6))
-    ax = fig.add_subplot(111)
-    ax.plot(t, V_k, c='r', label="Prawdziwa fala bez szumu")  
-    ax.scatter(t, signal_with_noise, c='g', marker='o', label="Zaszumiona fala trójkątna")
-    ax.set_title(f'Prawdziwa i zaszumiona fala')
-    ax.legend(loc='upper right')
-    ax.set_xlabel('Czas (s)')
-    ax.set_ylabel('Amplituda')
-    fig.savefig(os.path.join(os.path.dirname(__file__), "images_test", "Prawdziwa.png"))
-    return signal_with_noise, noise
-
-def simulation(N, signal, signal_with_noise, t, noise, Lambda):
-    P_k = np.array([[100, 0, 0],
-                    [0, 100, 0],
-                    [0, 0, 100]])
+def simulation(signal_IN, t,  b_true, Lambda):
+    N = len(t)
+    signal_OUT, V_true = preparing_data(signal_IN, t, b_true)
+    
+    P_k = np.array([[1000, 0, 0],
+                    [0, 1000, 0],
+                    [0, 0, 1000]])
 
     b_estimated = np.array([[0],
                             [0],
                             [0]])
+    
     V_k = np.zeros(N)
+    estimated_with_noise = np.zeros(N)
+    MSE_sum = 0
+    MSE_sum2 = 0
     for k in range(2, N):
-        Q = np.array([[signal[k]],
-                      [signal[k-1]],
-                      [signal[k-2]]])
+        # triangular noise - to get different one than original
+        noise = [ 8*(random.random() + random.random() - 1) for _ in range(N)]
 
-        y_k = np.array([[signal_with_noise[k]],
-                        [signal_with_noise[k-1]],
-                        [signal_with_noise[k-2]]])
+        # Calculate b_estimated based on Input and Output
+        # Wejscia - regresor ??
+        Q = np.array([[signal_IN[k]],
+                      [signal_IN[k-1]],
+                      [signal_IN[k-2]]])
+        
+        # Wyjścia (czemu 3?)
+        y_3 = np.array([[signal_OUT[k]],
+                        [signal_OUT[k-1]],
+                        [signal_OUT[k-2]]])
 
-        # Obliczenia P_k
+        # Calculate P_k - macierz kowariancji
         new_P_k = 1/Lambda * (P_k - (P_k @ Q @ Q.T @ P_k) / (Lambda + Q.T @ P_k @ Q))
         P_k = new_P_k
 
-        # Obliczenia b_estimated
-        new_b_estimated = b_estimated + P_k @ Q * (y_k - Q.T @ b_estimated)
+        # Calculate b_estimated  -- tutaj dla y_3 działa słabo, dla y_3[0] działa perfekcyjnie XDD
+        new_b_estimated = b_estimated + P_k @ Q * (y_3[0] - Q.T @ b_estimated)
         b_estimated = new_b_estimated
+     
+        V_k[k] =  (b_estimated[0][0]*signal_IN[k] + b_estimated[1][0]*signal_IN[k-1] + b_estimated[2][0]*signal_IN[k-2])
+        estimated_with_noise[k] = V_k[k] + noise[k]
 
-    # Tworzenie nowego sygnału
-    estimated_output = np.zeros(N)
-    V_true = np.zeros(N)
-    b_0, b_1, b_2 = 1, 1, 1
-    b_true = [b_0, b_1, b_2]
-    for k in range(2,N): 
-        V_k[k] = 1/3 * (b_estimated[0][0]*signal[k] + b_estimated[1][0]*signal[k-1] + b_estimated[2][0]*signal[k-2])
-        V_true[k] = 1/3 * (b_true[0]*signal[k] + b_true[1]*signal[k-1] + b_true[2]*signal[k-2])
-        # estimated_output[k] = V_k[k] + noise[k]
+        MSE_sum += (np.abs(V_k[k] - signal_OUT[k]))**2
+        MSE_sum2 += (np.abs(estimated_with_noise[k] - signal_OUT[k]))**2
+
+
+    MSE = MSE_sum/(N-2)
+    MSE2 = MSE_sum2/(N-2)
     print(b_estimated)
+    print(f"MSE dla Lambdy = {Lambda} : {MSE}")
+    print(f"MSE2 dla Lambdy = {Lambda} : {MSE2}")
+    return V_k, V_true, estimated_with_noise, signal_OUT, MSE, MSE2
+    
 
+def image(t, signal_IN, b_true, Lambda):
+    V_k, V_true, estimated_with_noise, signal_OUT, MSE, MSE2 = simulation(signal_IN, t,  b_true, Lambda)
     fig = plt.figure(figsize=(14, 6))
     ax = fig.add_subplot(111)
     ax.plot(t, V_k, c='b', label="Estymowana fala") 
-    ax.plot(t, V_true, c='orange', label="Fala trójkątna bez szumu")
-    # ax.plot(t, estimated_output, c='r', label="Estymowana fala + szum")  
-    # ax.plot(t, signal_with_noise, c='g', label="Zaszumiona fala trójkątna")
-    ax.set_title(f'Estymowana i zaszumiona fala')
+    # ax.plot(t, V_true, c='r', label="Fala trójkątna bez szumu")
+    ax.scatter(t, V_k, c='b', marker="o", s=10, label="Estymowana fala") 
+    # ax.scatter(t, V_true, c='r', marker="o", s=10, label="Fala trójkątna bez szumu")
+    # ax.scatter(t, estimated_with_noise, c='r', marker="o", label="Estymowana fala + szum")  
+    # ax.scatter(t, signal_OUT, c='g', marker="o", label="Zaszumiona fala trójkątna")
+    # ax.plot(t, estimated_with_noise, c='r', label="Estymowana fala + szum")  
+    ax.plot(t, signal_OUT, c='g', label="Zaszumiona fala trójkątna")
+    ax.set_title(f'Estymowana i zaszumiona fala dla Lamby = {Lambda}')
     ax.legend(loc='upper right')
     ax.set_xlabel('Czas (s)')
     ax.set_ylabel('Amplituda')
-    fig.savefig(os.path.join(os.path.dirname(__file__), "images_test", "Estymowana.png"))
+    fig.savefig(os.path.join(os.path.dirname(__file__), "images_test", f"Estymowana_Lambda={Lambda}.png"))
+
+
+def image_MSE(t, signal_IN, b_true, Lambda):
+    MSE = np.zeros(len(Lambda))
+    MSE2 = np.zeros(len(Lambda))
+    for i in range(len(Lambda)):
+        V_k, V_true, estimated_with_noise, signal_OUT, mse, mse2 = simulation(signal_IN, t,  b_true, Lambda[i])
+        MSE[i] = mse
+        MSE2[i] = mse2
+    
+    fig_MSE = plt.figure(figsize=(14,6))
+    ax_MSE = fig_MSE.add_subplot(121)
+    ax_MSE.plot(Lambda, MSE)
+    ax_MSE.set_title(f'MSE  od Lambdy')
+    ax_MSE.legend(loc='upper right')
+    ax_MSE.set_xlabel('Czas (s)')
+    ax_MSE.set_ylabel('Amplituda')
+
+    ax_MSE2 = fig_MSE.add_subplot(122)
+    ax_MSE2.plot(Lambda, MSE)
+    ax_MSE2.set_title(f'MSE  od Lambdy')
+    ax_MSE2.legend(loc='upper right')
+    ax_MSE2.set_xlabel('Czas (s)')
+    ax_MSE2.set_ylabel('Amplituda')
+    fig_MSE.savefig(os.path.join(os.path.dirname(__file__), "images_test", f"MSE.png"))
 
 
 # ZNANE
-# signal -> u_k -- wartość na wejściu 
-# signal_with_noise -> y_k -- wartość na wyjściu
+# signal_IN
+# -> u_k -- wartość na wejściu 
+# signal_OUT -> y_3 -- wartość na wyjściu
 # SZUKANE
 # b_true -> poprzez b_estimated
 # INNE
 # V_k -> sygnał po wyjściu z obiektu, którym mamy "sterować" 
 def main():
     # triangular function parameters 
-    frequency = 0.01  # Frequency of the signal (cycles per second)
+    frequency = 0.01  # Frequency of the signal_IN(cycles per second)
     period = 1 / frequency
-    amplitude = 1.0  # Amplitude of the signal
-    duration = 500.0  # Duration of the signal (seconds)
-    sampling_frequency = 0.5 # Sampling frequency (samples per second)
+    amplitude = 1.0  # Amplitude of the signal_IN
+
+    duration = 500.0  # Duration of the signal_IN(seconds)
+    sampling_frequency = 0.25 # Sampling frequency (samples per second)
     
     # time vector
     t = np.linspace(0, duration, int(sampling_frequency * duration), endpoint=False) # <class 'numpy.ndarray'>
-    N = len(t)
-    signal = ((4 * amplitude) / period) * np.abs(((t - (period * 0.25))%period) - (period * 0.5)) - amplitude
+    signal_IN = ((4 * amplitude) / period) * np.abs(((t - (period * 0.25))%period) - (period * 0.5)) - amplitude
+    # signal_IN = amplitude * np.sin(2 * np.pi * random.random() * t)
+    # signal_IN = [ random.random()-0.5 for _ in range(len(t))]
 
-    signal_with_noise, noise = preparing_data(signal, t)
+    Lambda = [1, 0.8]
+    b_0, b_1, b_2 = 12, 2, 0.5
+    b_true = [b_0, b_1, b_2] # powinna być macierz pionowa, ale nie chce mi sie tego komplikować po adekwatność do zadania, jak kod działa tak samo
+    
+    for i in range(len(Lambda)):
+        image(t, signal_IN, b_true, Lambda[i])
 
-    simulation(N, signal, signal_with_noise, t, noise, Lambda = 1)
-
+    # image_MSE(t, signal_IN, b_true, Lambda)
     
 if __name__ == "__main__":
     main()
