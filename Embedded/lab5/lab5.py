@@ -10,7 +10,7 @@ import time
 # USTAWIENIE PINOW
 joints_OFF =  [[1,5],[2,8]]
 joint_ON = [[1,6],[2,7]]
-LED = Pin(2, Pin.OUT) # LED = Pin('Y12',Pin.OUT)
+LED = Pin(2, Pin.OUT) #LED = Pin('Y12',Pin.OUT)
 # LED_2 = Pin(0, Pin.OUT) 
 # joint_off1 = [Pin(1, Pin.OUT),Pin(5, Pn.OUT)] ??
 # joint_off2 = [Pin(2, Pin.OUT),Pin(8, Pin.OUT)]
