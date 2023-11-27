@@ -54,10 +54,10 @@ def simulation(N, b_true, Lambda, v_wanted):
 
         # sterowanie
         if k == 0:
-            u_k[k+1] = (v_wanted[k] - b_estimated[1,k]*u_k[k])/b_estimated[0,k]
+            u_k[k+1] = (v_wanted[k+1] - b_estimated[1,k]*u_k[k])/b_estimated[0,k]
             print(f"u_k dla 1 = {u_k[1]}")
         elif k < N - 1:
-            u_k[k+1] = (v_wanted[k] - b_estimated[1,k]*u_k[k] - b_estimated[2,k]*u_k[k-1])/b_estimated[0,k]
+            u_k[k+1] = (v_wanted[k+1] - b_estimated[1,k]*u_k[k] - b_estimated[2,k]*u_k[k-1])/b_estimated[0,k]
 
         if k < N - 1:
                 Phi[2,0] = Phi[1,0]
