@@ -1,21 +1,12 @@
 from machine import Pin
 import time
-# Do przycisków: ???
-# przycisk_pin = Pin(0, Pin.IN, Pin.PULL_UP)  # Ustawienie pinu przycisku (dla przykładu użyto pinu numer 0)
-# Funkcja obsługująca naciśnięcie przycisku
-# def obsluz_przycisk(pin):
-#     print("Przycisk został naciśnięty!")
-# # Przypisz funkcję obsługującą do przerwania na zmianę stanu pinu (naciśnięcie przycisku)
-# przycisk_pin.irq(trigger=Pin.IRQ_FALLING, handler=obsluz_przycisk)
-# USTAWIENIE PINOW
-joints_OFF =  [[1,5],[2,8]]
-joint_ON = [[1,6],[2,7]]
-LED = Pin(2, Pin.OUT) #LED = Pin('Y12',Pin.OUT)
-# LED_2 = Pin(0, Pin.OUT) 
-# joint_off1 = [Pin(1, Pin.OUT),Pin(5, Pn.OUT)] ??
-# joint_off2 = [Pin(2, Pin.OUT),Pin(8, Pin.OUT)]
-# joint_on1 =  [Pin(1, Pin.OUT),Pin(6, Pin.OUT)]
-# joint_on2 = [Pin(2, Pin.OUT),Pin(7, Pin.OUT)]
+# value(0) -> on  ; value(1) -> off ??
+SWITCH = Pin(15, Pin.IN) 
+LED1 = Pin(4, Pin.OUT)
+LED2 = Pin(5,Pin.OUT) 
+# LED1 = Pin('Y12',Pin.OUT)
+# LED2 = Pin('Y11',Pin.OUT)
+# SWITCH = Pin('Y13',Pin.IN)
 def INFO():
     print("\t----- PRZEKAZNIK CZASOWY PCU-520 -----")
     print("\t ---- SPOSOB DZIALANIA AUTO ----")
@@ -63,102 +54,81 @@ def AUTO():
 def LED_PULS():
     for i in range(10):
         # zapal/zgas diode1
-        LED.value(not LED.value())
+        LED2.value(not LED2.value())
         # time.sleep_ms(100)
         time.sleep(0.1)
         #zgas/ zapal diode
-        LED.value(not LED.value())
+        LED2.value(not LED2.value())
         time.sleep(0.1)
 def A(t1, t2):        
-    # zaczynamy od stykow na joint_OFF
-    start = input("Praca rozpocznie się po wcisnieciu przycisku ...")
-    if start == 'a':
-        # ustawienie stykow na joint_ON
-        LED.off()
-        print("ON")
-        time.sleep(t1-2)
-        LED_PULS()
-        # ustawienie styków na joint_OFF
-        LED.on()
-        print("OFF")
-        time.sleep(t2-2)
-        LED_PULS
-        # ustawienie stykow na joint_ON
-        LED.off()
-        print("ON")
-        return
+    print("Praca rozpocznie się po wcisnieciu przycisku")
+    while SWITCH.value() == 0:
+        pass  # Wait for the button press
+    # wyłącz LED1
+    LED1.value(0)
+    time.sleep(t1-2)
+    LED_PULS()
+    # włącz LED1
+    LED1.value(1)
+    time.sleep(t2-2)
+    LED_PULS
+    # wyłącz Led
+    LED1.value(0)
+    return
 def B(t1, t2):
-    # zaczynamy od stykow na joint_OFF
-    start = input("Praca rozpocznie się po wcisnieciu przycisku ...")
-    if start == 'a':
-        # styki na joint_OFF
-        LED.on()
-        print("OFF")
+    print("Praca rozpocznie się po wcisnieciu przycisku")
+    while SWITCH.value() == 0:
+        pass  # Wait for the button press
+    # styki na joint_OFF
+    LED1.value(1)
+    time.sleep(t1-2)
+    LED_PULS()
+    # ustawienie styków na joint_ON
+    LED1.value(0)
+    time.sleep(t2-2)
+    LED_PULS()
+    # ustawienie stykow na joint_OFF
+    LED1.value(1)
+    return
+def C(t1, t2):
+    print("Praca rozpocznie się po wcisnieciu przycisku")
+    while SWITCH.value() == 0:
+        pass  # Wait for the button press
+    i=0 # do zmiany na przycisk ??
+    LED1.value(0) # zaczynamy na on
+    while(i < 5):
+        # zmiana stanu LED1
+        LED1.value(not LED1.value())
         time.sleep(t1-2)
         LED_PULS()
-        # ustawienie styków na joint_ON
-        LED.off()
-        print("ON")
-        time.sleep(t2-2)
-        LED_PULS()
-        # ustawienie stykow na joint_OFF
-        LED.on()
-        print("ON")
-        return
-def C(t1, t2):
-    # zaczynamy od stykow na joint_OFF
-    start = input("Praca rozpocznie się po wcisnieciu przycisku ...")
-    if start == 'a':
-        i=0 # do zmiany na przycisk ??
-        while(i < 10):
-            # ustawienie stykow na joint_ON
-            LED.off()
-            print("ON")
-            time.sleep(t1-2)
-            LED_PULS()
-            # ustawienie styków na joint_OFF
-            LED.on()
-            print("OFF")
-            time.sleep(t2-2)
-            LED_PULS()
-            i += 1
-        return
-def D(t1, t2):
-    # zaczynamy od stykow na joint_OFF
-    start = input("Praca rozpocznie się po wcisnieciu przycisku ...")
-    # ustawienie stykow na joint_ON
-    if start == 'a':
-        i=0 # do zmiany na przycisk ??
-        while(i < 10):
-            # styki sa na joint_OFF
-            LED.on()
-            print("OFF")
-            time.sleep(t1-2)
-            LED_PULS()
-            # ustawienie stykow na joint_ON
-            LED.off()
-            print("ON")
-            time.sleep(t2-2)
-            LED_PULS()
-            i += 1
-        return
-def MANUAL_BI():
-    i = 0 # do zmiany na przycisk ??
-    while(i < 10):
         i += 1
-        if( True):
-            # LED.value(not led.value())
-            print("zmiana stanu")
+    return
+def D(t1, t2):
+    print("Praca rozpocznie się po wcisnieciu przycisku")
+    while SWITCH.value() == 0:
+        pass  # Wait for the button press
+    i=0 # do zmiany na przycisk ??
+    LED1.value(1) # zaczynammy na off
+    while(i < 5):
+        # szmiana stanu LED1
+        LED1.value(not LED1.value())
+        time.sleep(t1-2)
+        LED_PULS()
+        i += 1
+    return
+def MANUAL_BI():
+    while(True):
+        while SWITCH.value() == 0:
+            pass  # Wait for the button press
+        LED1.value(not LED1.value())
     return
 def MANUAL_MONO():
-    i = 0 # do zmiany na przycisk ??
-    while(i < 10):
-        i += 1
-        if( True):
-            # LED.off
-            print("ON przez 1s")
-            time.sleep(1)
-            print("ON")
+    while(True):
+        while SWITCH.value() == 0:
+            pass  # Wait for the button press
+        LED1.value(1)
+        time.sleep(1)
+        LED1.value(0)
     return
 def driver():
     choice = MENU()
