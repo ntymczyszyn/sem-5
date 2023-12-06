@@ -127,9 +127,9 @@ def MANUAL_MONO():
     while(True):
         while SWITCH.value() == 0:
             pass  # Wait for the button press
-        LED1.value(1)
-        time.sleep(1)
         LED1.value(0)
+        time.sleep(1)
+        LED1.value(1)
     # ti tak samo jak w _BI
 def driver():
     choice = MENU()
