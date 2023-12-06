@@ -9,9 +9,9 @@ LED2 = Pin(5,Pin.OUT)
 # SWITCH = Pin('Y13',Pin.IN)
 def INFO():
     print("\t----- PRZEKAZNIK CZASOWY PCU-520 -----")
-    print("\t ---- SPOSOB DZIALANIA AUTO ----")
     print("Styki pozostaja w pozycji 1-5, 2-8 (OFF) do czasu zalaczenia. Po podaniu napiecia zasilajacego przelaczone zostaja w pozycja 1-6, 2-7(ON).")
-    print("A - OPOZNIONE WYLACZENIE \nDo czasu zalaczenia przekaznika styki pozostaja w pozycji 1-5, 2-8.\nPo podaniu napiecia zasilajacego styki zostaja przelaczone w pozycje 1-6, 2-7 na czas t1. \nPo odmierzeniu czasu t1 styki powracaja do pozycji 1-5, 2-8 na czas t2. \nPo czasie t2 styki przekaznika powracaja do pozycji 1-5, 2-8 na czas t2. Po czasie t2 styki przekaznika powracaja do pozycji 1-6, 2-7. \nPonowna realizacja trybu pracy przekaznika mozliwa jest po odlaczeniu napiecia zasilajacego i ponownym jego zalaczeniu.")
+    print("\t ---- SPOSOB DZIALANIA TRYBU AUTO ----")
+    print("A - OPOZNIONE WYLACZENIE \nDo czasu zalaczenia przekaznika styki pozostaja w pozycji 1-5, 2-8.\nPo podaniu napiecia zasilajacego styki zostaja przelaczone w pozycje 1-6, 2-7 na czas t1. \nPo odmierzeniu czasu t1 styki powracaja do pozycji 1-5, 2-8 na czas t2. \nPo czasie t2 styki przekaznika powracaja do pozycji 1-6, 2-7. \nPonowna realizacja trybu pracy przekaznika mozliwa jest po odlaczeniu napiecia zasilajacego i ponownym jego zalaczeniu.")
     print("B - OPOZNIONE ZALACZENIE \nPo podaniu napiecia zasilajacego styki pozostaja w pozycji 1-5, 2-8 przez czas t1. \nPo odmierzeniu czasu t1 nastepuje przelaczenie stykow w pozycje 1-6, 2-7 na czas t2. \nPo czasie t2 styki przekaznika powracaja do pozycji 1-5, 2-8. \nPonowna realizacja trybu pracy przekaznika mozliwa jest po odlaczeniu napiecia zasilajacego i ponownym jego zalaczeniu.")
     print("C - OPOZNIONE WYLACZENIE - CYKLICZNIE \nTryb pracy opoznionego wylaczania realizowany cyklicznie w ustawionych odstepach czasu pracy i przerwy.")
     print("D - OPOZNIONE ZALACZENIE - CYKLICZNIE \nTryb pracy opoznionego zalaczania realizowany cyklicznie w ustawionych odstepach czasu pracy i przerwy.") 
@@ -22,11 +22,11 @@ def MENU():
     except ValueError:
         print("ValueError - wprowadzona wartosc nie jest liczba naturalna, sprobuj ponownie.")
         return
-    if ( choice == 1 or choice == 2 or choice == 3):
+    if (choice == 1 or choice == 2 or choice == 3):
         return choice
     else:
         print("Blednie dane, sprobuj ponownie")
-        return MENU() # Mozna tak?
+        return MENU() # Mozna tak? najwyraźniej --N
 def AUTO():
     try:
         print("FUNCJE: \nA. Opoznione wylaczanie \nB. Opoznione zalaczanie \nC. Opoznione wylaczenie-cykliczne \nD. Opoznione zalaczenie-cykliczne")
@@ -38,7 +38,7 @@ def AUTO():
         t1 = float(input("Podaj t1 [3s - 12s]: ")) 
         t2 = float(input("Podaj t2 [3s - 12s]: "))
     except ValueError:
-        print("ValueError - wprowadzona wartosc nie niepoprawna, sprobuj ponownie.")
+        print("ValueError - wprowadzona wartosc jest niepoprawna, sprobuj ponownie.")
         return
     if (t1 > 2 or t2 > 2):
         if choice == 'A' or choice == 'a':
@@ -51,6 +51,7 @@ def AUTO():
             D(t1, t2)
     else:
         print("Za male wartosci")
+        return # dodane
 def LED_PULS():
     for i in range(10):
         # zapal/zgas diode1
@@ -74,7 +75,7 @@ def A(t1, t2):
     LED_PULS
     # wyłącz Led
     LED1.value(0)
-    return
+    return # tu w sumie return if przycisk pressed i we wszystkich AUTO
 def B(t1, t2):
     print("Praca rozpocznie się po wcisnieciu przycisku")
     while SWITCH.value() == 0:
@@ -120,8 +121,8 @@ def MANUAL_BI():
     while(True):
         while SWITCH.value() == 0:
             pass  # Wait for the button press
-        LED1.value(not LED1.value())
-    return
+        LED1.value(not LED1.value()) # czy to napewno zdziała??
+    #return usunełam bo i tak nie podtzebny
 def MANUAL_MONO():
     while(True):
         while SWITCH.value() == 0:
@@ -129,7 +130,7 @@ def MANUAL_MONO():
         LED1.value(1)
         time.sleep(1)
         LED1.value(0)
-    return
+    # ti tak samo jak w _BI
 def driver():
     choice = MENU()
     if choice == 1:
@@ -138,8 +139,8 @@ def driver():
         MANUAL_BI()
     elif choice == 3:
         MANUAL_MONO()
-    else:
-        print("Nieprawidłowy wybór.")
+    # else: # to się chyba nigdy nie wykona??
+    #     print("Nieprawidłowy wybór.")
 def main():
     INFO()
     driver()
