@@ -34,9 +34,9 @@ def driver():
                     time.sleep_ms(1000)
                     led.on()
                     print("dlugie")
-                time.sleep_ms(200)# przerwa bardzo krótka
-            time.sleep_ms(100)# przerwa między literami
-        # przerwa między słowami - naraziejedno slowo  
+                time.sleep_ms(200) # przerwa bardzo krótka
+            time.sleep_ms(100) # przerwa między literami
+        # przerwa między słowami - na razie jedno slowo  
 def main():
 	k = 't'
 	driver()
