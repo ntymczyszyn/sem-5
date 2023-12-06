@@ -10,11 +10,11 @@ LED2 = Pin(5,Pin.OUT)
 def INFO():
     print("\t----- PRZEKAZNIK CZASOWY PCU-520 -----")
     print("\t ---- SPOSOB DZIALANIA AUTO ----")
-    print("Styki pozostaja w pozycji 1-5, 2-8 (OFF) do czasu zalaczenia. Po podaniu napiecia zasilajacego przelaczone zostaja w pozycja 1-6, 2-7(ON).")
-    print("A - OPOZNIONE WYLACZENIE \nDo czasu zalaczenia przekaznika styki pozostaja w pozycji 1-5, 2-8.\nPo podaniu napiecia zasilajacego styki zostaja przelaczone w pozycje 1-6, 2-7 na czas t1. \nPo odmierzeniu czasu t1 styki powracaja do pozycji 1-5, 2-8 na czas t2. \nPo czasie t2 styki przekaznika powracaja do pozycji 1-5, 2-8 na czas t2. Po czasie t2 styki przekaznika powracaja do pozycji 1-6, 2-7. \nPonowna realizacja trybu pracy przekaznika mozliwa jest po odlaczeniu napiecia zasilajacego i ponownym jego zalaczeniu.")
-    print("B - OPOZNIONE ZALACZENIE \nPo podaniu napiecia zasilajacego styki pozostaja w pozycji 1-5, 2-8 przez czas t1. \nPo odmierzeniu czasu t1 nastepuje przelaczenie stykow w pozycje 1-6, 2-7 na czas t2. \nPo czasie t2 styki przekaznika powracaja do pozycji 1-5, 2-8. \nPonowna realizacja trybu pracy przekaznika mozliwa jest po odlaczeniu napiecia zasilajacego i ponownym jego zalaczeniu.")
-    print("C - OPOZNIONE WYLACZENIE - CYKLICZNIE \nTryb pracy opoznionego wylaczania realizowany cyklicznie w ustawionych odstepach czasu pracy i przerwy.")
-    print("D - OPOZNIONE ZALACZENIE - CYKLICZNIE \nTryb pracy opoznionego zalaczania realizowany cyklicznie w ustawionych odstepach czasu pracy i przerwy.") 
+    print("A - OPOZNIONE WYLACZENIE \n  Po przycisnieciu przycisku Ledy zapalaja sie. Nastepnie po czasie t1 zostaja znaszone na czas t2 po czym zostaja ponownie zapalone.")
+    print("B - OPOZNIONE ZALACZENIE \n  Po przycisnieciu przycisku Ledy gasza sie. Po odmierzeniu czasu t1 nastepuje wlaczenie ledow na czas t2. Po tym czasie zostaja one wylaczone")
+    print("C - OPOZNIONE WYLACZENIE - CYKLICZNIE \n Cyklicznie realizowany tryb pracy i przerwy w podanych czasach t1 i t2, rozpoczynajacy sie od wlaczenia ledu")
+    print("D - OPOZNIONE ZALACZENIE - CYKLICZNIE \n Cyklicznie realizowany tryb pracy i przerwy w podanych czasach t1 i t2, rozpoczynajacy sie od wylaczenia ledu") 
+    print("Przed zmiana stanu ledu przez 2 sekundy nastepuje szybkie zapalanie oraz gaszenie ledu 2.")
     return
 def MENU():
     try:
@@ -126,9 +126,9 @@ def MANUAL_MONO():
     while(True):
         while SWITCH.value() == 0:
             pass  # Wait for the button press
-        LED1.value(1)
-        time.sleep(1)
         LED1.value(0)
+        time.sleep(1)
+        LED1.value(1)
     return
 def driver():
     choice = MENU()
