@@ -40,7 +40,8 @@ def AUTO():
     except ValueError:
         print("ValueError - wprowadzona wartosc jest niepoprawna, sprobuj ponownie.")
         return
-    if (t1 > 2 or t2 > 2):
+    # a co jak użytkownik da inną literkę niż abcd??
+    if (13 > t1 > 2 and 13 > t2 > 2): # hard coded są te wartosci ale no w sumie moga byc
         if choice == 'A' or choice == 'a':
             A(t1, t2)
         elif choice == 'B' or choice == 'b':
@@ -50,9 +51,9 @@ def AUTO():
         elif choice == 'D' or choice == 'd':
             D(t1, t2)
     else:
-        print("Za male wartosci")
+        print("Wartosci spoza zakresu -> [3,12].")
         return # dodane
-def LED_PULS():
+def LED2_BLINK():
     for i in range(10):
         # zapal/zgas diode1
         LED2.value(not LED2.value())
@@ -68,61 +69,61 @@ def A(t1, t2):
     # wyłącz LED1
     LED1.value(0)
     time.sleep(t1-2)
-    LED_PULS()
+    LED2_BLINK()
     # włącz LED1
     LED1.value(1)
     time.sleep(t2-2)
-    LED_PULS
+    LED2_BLINK
     # wyłącz Led
     LED1.value(0)
-    return # tu w sumie return if przycisk pressed i we wszystkich AUTO
+    # wylaczy sie jak nacisniemy przycisk
+    while SWITCH.value() == 0:
+        pass  
 def B(t1, t2):
     print("Praca rozpocznie się po wcisnieciu przycisku")
     while SWITCH.value() == 0:
         pass  # Wait for the button press
-    # styki na joint_OFF
     LED1.value(1)
     time.sleep(t1-2)
-    LED_PULS()
-    # ustawienie styków na joint_ON
+    LED2_BLINK()
     LED1.value(0)
     time.sleep(t2-2)
-    LED_PULS()
-    # ustawienie stykow na joint_OFF
+    LED2_BLINK()
     LED1.value(1)
-    return
+    # wylaczy sie jak nacisniemy przycisk
+    while SWITCH.value() == 0:
+        pass
 def C(t1, t2):
     print("Praca rozpocznie się po wcisnieciu przycisku")
     while SWITCH.value() == 0:
         pass  # Wait for the button press
-    i=0 # do zmiany na przycisk ??
-    LED1.value(0) # zaczynamy na on
-    while(i < 5):
-        # zmiana stanu LED1
-        LED1.value(not LED1.value())
+    # dopóki nie wciśniemy przycisku to się wewnętrzne pętle wykoują
+    while SWITCH.value() == 0: 
+        LED1.value(0) # zaczynamy na on
         time.sleep(t1-2)
-        LED_PULS()
-        i += 1
+        LED2_BLINK()
+        LED1.value(1) 
+        time.sleep(t2-2)
+        LED2_BLINK()
     return
 def D(t1, t2):
     print("Praca rozpocznie się po wcisnieciu przycisku")
     while SWITCH.value() == 0:
         pass  # Wait for the button press
-    i=0 # do zmiany na przycisk ??
-    LED1.value(1) # zaczynammy na off
-    while(i < 5):
-        # szmiana stanu LED1
-        LED1.value(not LED1.value())
+    # dopóki nie wciśniemy przycisku to się wewnętrzne pętle wykoują
+    while SWITCH.value() == 0: 
+        LED1.value(1) # zaczynamy na off
         time.sleep(t1-2)
-        LED_PULS()
-        i += 1
+        LED2_BLINK()
+        LED1.value(0) 
+        time.sleep(t2-2)
+        LED2_BLINK()
     return
 def MANUAL_BI():
     while(True):
         while SWITCH.value() == 0:
             pass  # Wait for the button press
         LED1.value(not LED1.value()) # czy to napewno zdziała??
-    #return usunełam bo i tak nie podtzebny
 def MANUAL_MONO():
     while(True):
         while SWITCH.value() == 0:
@@ -130,7 +131,6 @@ def MANUAL_MONO():
         LED1.value(0)
         time.sleep(1)
         LED1.value(1)
-    # ti tak samo jak w _BI
 def driver():
     choice = MENU()
     if choice == 1:
