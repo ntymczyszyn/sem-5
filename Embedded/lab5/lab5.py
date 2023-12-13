@@ -12,24 +12,23 @@ def INFO():
     print("B - OPOZNIONE ZALACZENIE \nPo podaniu napiecia zasilajacego styki pozostaja w pozycji 1-5, 2-8 przez czas t1. \nPo odmierzeniu czasu t1 nastepuje przelaczenie stykow w pozycje 1-6, 2-7 na czas t2. \nPo czasie t2 styki przekaznika powracaja do pozycji 1-5, 2-8. \nPonowna realizacja trybu pracy przekaznika mozliwa jest po odlaczeniu napiecia zasilajacego i ponownym jego zalaczeniu.")
     print("C - OPOZNIONE WYLACZENIE - CYKLICZNIE \nTryb pracy opoznionego wylaczania realizowany cyklicznie w ustawionych odstepach czasu pracy i przerwy.")
     print("D - OPOZNIONE ZALACZENIE - CYKLICZNIE \nTryb pracy opoznionego zalaczania realizowany cyklicznie w ustawionych odstepach czasu pracy i przerwy.") 
-    return
 def MENU():
     try:
         choice = int(input("TRYBY PRACY: \n1. AUTO \n2.MANUAL_BI \n3.MANUAL_MONO \nWybor: "))
     except ValueError:
         print("ValueError - wprowadzona wartosc nie jest liczba naturalna.")
-        return
+        return -1
     if (choice == 1 or choice == 2 or choice == 3):
         return choice
     else:
-        print("Blednie dane.")
+        print("Blednie wybor trybu pracy.")
         return MENU()
 def AUTO():
     try:
         print("FUNCJE: \nA. Opoznione wylaczanie \nB. Opoznione zalaczanie \nC. Opoznione wylaczenie-cykliczne \nD. Opoznione zalaczenie-cykliczne")
         choice = str(input("Wybor: "))
     except ValueError:
-        print("ValueError - wprowadzona wartosc jest nieprawidlowa")
+        print("ValueError - wprowadzona wartosc jest nieprawidlowa.")
         return 
     try:
         t1 = float(input("Podaj t1 [3s - 12s]: ")) 
@@ -97,7 +96,6 @@ def C(t1, t2):
         # wyjscie z trybu po nacisnieciu przycisku
         if SWITCH.value() == 1:
             break
-    return
 def D(t1, t2):
     print("Praca rozpocznie się po wcisnieciu przycisku")
     while SWITCH.value() == 0:
@@ -112,7 +110,6 @@ def D(t1, t2):
         # wyjscie z trybu po nacisnieciu przycisku
         if SWITCH.value() == 1:
             break
-    return
 def MANUAL_BI():
     while(True):
         while SWITCH.value() == 0:
@@ -143,6 +140,6 @@ def main():
         elif k == 'T' or k == 't':
             driver()
         else: 
-            print("Blad! Wprowadzono niepoprawna wartosc.")
+            print("Blad! Wprowadzono niepoprawna wartosc, sprobuj ponownie.")
             continue  
 main()
