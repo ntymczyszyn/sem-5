@@ -8,18 +8,20 @@ images_folder = "images"
 # images_folder2 = "images"
 
 def simulation(N):
-    u_1 = [random.random() for _ in range(N)]
-    u_2 = [random.random() for _ in range(N)]
+    # u_1 = [random.random() for _ in range(N)]
+    # u_2 = [random.random() for _ in range(N)]
+    u_1 = np.random.uniform(0, 3, N)
+    u_2 = np.random.uniform(0, 3, N)
     z_1 = [C *(random.random() + random.random() - 1) for _ in range(N)]
     z_2 = [C *(random.random() + random.random() - 1) for _ in range(N)]
-    a_1, a_2 = 1/2, 1/4
+    a_1, a_2 = 0.5, 0.25
     b_1, b_2= 1, 1
-    U =  np.array([u_1, u_2])
-    Z =  np.array([z_1, z_2])
+    U =  np.array([u_1, u_2]) # wejścia
+    Z =  np.array([z_1, z_2]) # zakłócenia
     A =  np.array([[a_1, 0],
-                   [0, a_2]])
+                   [0, a_2]]) # parametry A
     B =  np.array([[b_1, 0],
-                   [0, b_2]])
+                   [0, b_2]]) # parametry B
     H =  np.array([[0, 1],
                    [1, 0]])
     I =  np.array([[1, 0],
@@ -27,13 +29,14 @@ def simulation(N):
     Y =  np.zeros((2,N))
     X =  np.zeros((2,N))
     for k in range(N):
-        Y[:,k] = np.dot((I - np.dot(A, H))**(-1) , np.dot(B, U[:,k])) + np.dot((I - np.dot(A, H))**(-1), Z[:,k])
+        # Y[:,k] = np.dot(np.dot((I - np.dot(A, H))**(-1), B), U[:,k]) + np.dot((I - np.dot(A, H))**(-1), Z[:,k])
+        Y[:,k] = np.dot(np.dot(np.linalg.inv(I - np.dot(A, H)), B), U[:,k]) + np.dot(np.linalg.inv(I - np.dot(A, H)), Z[:,k])
         # if k > 0:  # tutaj bierzemy dla kolejnego?
         X[:,k] = np.dot(H, Y[:,k])
     return U, Y, X, H, I
 
-def identification(t):
-    N = len(t)
+def identification(N): # ale ale to t to w sumie jest N 
+    # N = len(t) # to po co ta linijka??
     U, Y, X, H, I = simulation(N)
     W = np.array([[U[0], X[0]],
                   [U[1], X[1]]])
@@ -41,8 +44,10 @@ def identification(t):
     W_2 = np.array([U[1], X[1]]) # for block 2
     EST = np.zeros((2,2))
     for i in range(2):
-        EST[i] = np.dot(np.dot(Y[i], W[i].T), (np.dot(W[i], W[i].T)**(-1)))
-        print(f'Przed potega: {np.dot(W[i], W[i].T)}\nPotega -1 : {(np.dot(W[i], W[i].T)**(-1))}') # nie mam pojecia jak powinna wygladać odwrotność
+        EST[i] = np.dot(np.dot(Y[i], W[i].T), np.linalg.inv(np.dot(W[i], W[i].T)))
+        print(f'Przed potega: {np.dot(W[i], W[i].T)}\nOdwrotnosc : {np.linalg.inv(np.dot(W[i], W[i].T))}')
+    
+    EST = np.dot(np.dot(Y, W.T), np.linalg.inv(np.dot(W, W.T)))
     a = [[EST[0,0], 0],
          [0, EST[1,0]]]
     b = [[EST[0,1], 0],
@@ -53,7 +58,7 @@ def identification(t):
 def optimalization(t, wanted_output):
     N = len(t)
     U, Y, X, H, I, A, B = identification(t)
-    figure_identyfication(t, U, Y, X)
+    figure_identification(t, U, Y, X)
 
     # Ograniczenia u1, u2 <= 1
     u_1 = np.linspace(0, 1, len(t))
@@ -75,7 +80,7 @@ def optimalization(t, wanted_output):
     print(f'Y 0 max = {y_0_max}\nY 1 max = {y_1_max}')
     figure_opt(t, u_1, u_2, Q)
 
-def figure_identyfication(t, U, Y, X):
+def figure_identification(t, U, Y, X):
     fig1 = plt.figure(figsize=(12,6))
     ax1 = fig1.add_subplot(1,2,1)
     ax2 = fig1.add_subplot(1,2,2)
@@ -107,12 +112,13 @@ def figure_opt(t, u_1, u_2, Q):
     return 0
 
 def main():
-    duration = 10.0  # Duration of the u_k(seconds)
+    duration = 100.0  # Duration of the u_k(seconds)
     N = int(duration)# Amount of samples
     t = np.linspace(0, duration, N, endpoint=False) # <class 'numpy.ndarray'>
-    # identification(N)
+    # simulation(N)
+    identification(N)
 
-    optimalization(t, 2)
+    #optimalization(t, 2)
 
 
 main()
