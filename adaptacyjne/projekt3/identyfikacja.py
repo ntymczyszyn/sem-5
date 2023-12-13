@@ -3,7 +3,7 @@ import numpy as np
 import random
 import os
 
-C = 0
+C = 0.4
 images_folder = "images"
 # images_folder2 = "images"
 
@@ -28,58 +28,91 @@ def simulation(N):
     X =  np.zeros((2,N))
     for k in range(N):
         Y[:,k] = np.dot((I - np.dot(A, H))**(-1) , np.dot(B, U[:,k])) + np.dot((I - np.dot(A, H))**(-1), Z[:,k])
-        if k > 0:  # tutaj bierzemy dla kolejnego?
-            X[:,k] = np.dot(H, Y[:,k-1])
-    print(f"Y: {Y}")
+        # if k > 0:  # tutaj bierzemy dla kolejnego?
+        X[:,k] = np.dot(H, Y[:,k])
     return U, Y, X, H, I
 
-def identification(N):
+def identification(t):
+    N = len(t)
     U, Y, X, H, I = simulation(N)
-    W = np.array([[U[0], X[0]],[U[1], X[1]]])
+    W = np.array([[U[0], X[0]],
+                  [U[1], X[1]]])
     W_1 = np.array([U[0], X[0]]) # for block 1
     W_2 = np.array([U[1], X[1]]) # for block 2
     EST = np.zeros((2,2))
-    EST_1 = np.zeros(2)
-    EST_2 = np.zeros(2)
-    sum1 = 0
     for i in range(2):
-        # for k in range(N):
-        EST[i] = np.dot(np.dot(Y[i], W[i].T), np.dot(W[i], W[i].T))
-        print(f"Dla i = {i} \n EST = {EST[i]} \n")
-    
-    EST_1 = np.dot(np.dot(Y[0], W_1.T), np.dot(W_1, W_1.T))
-    EST_2 = np.dot(np.dot(Y[1], W_2.T), np.dot(W_2, W_2.T))
-    print(f" Est1 = {EST_1} \nEST2 = {EST_2}")
-
-    a = [[EST_1[0], 0],
-         [0, EST_2[0]]]
-    b = [[EST_1[1], 0],
-         [0, EST_2[1]]]
+        EST[i] = np.dot(np.dot(Y[i], W[i].T), (np.dot(W[i], W[i].T)**(-1)))
+        print(f'Przed potega: {np.dot(W[i], W[i].T)}\nPotega -1 : {(np.dot(W[i], W[i].T)**(-1))}') # nie mam pojecia jak powinna wygladać odwrotność
+    a = [[EST[0,0], 0],
+         [0, EST[1,0]]]
+    b = [[EST[0,1], 0],
+         [0, EST[1,1]]]
+    print(f'a i b = {EST}')
     return U, Y, X, H, I, a, b
 
-def optimalization(N):
-     U, Y, X, H, I, A, B = identification(N)
-     # Ograniczenia u1, u2 <= 1
-     u_1 = np.linspace(0, 1, 5)
-     u_2 = np.linspace(0, 1, 5)
-     for i in range(len(u_1)):
+def optimalization(t, wanted_output):
+    N = len(t)
+    U, Y, X, H, I, A, B = identification(t)
+    figure_identyfication(t, U, Y, X)
+
+    # Ograniczenia u1, u2 <= 1
+    u_1 = np.linspace(0, 1, len(t))
+    u_2 = np.linspace(0, 1, len(t))
+    Q = np.zeros((len(u_1),len(u_2)))
+    y_0_max = 0
+    y_1_max = 0
+    for i in range(len(u_1)):
         min = 5
-        for j in range(len(u_1)):
-             u = np.array([[u_1[i]],
-                           [u_2[j]]])
-             y = np.dot((I - np.dot(A, H))**(-1) , np.dot(B, u))
-             if(y[1] < min):
-                min = y[1]
-                index = j
-        print(f"Min = {min}, Index = {index}")
-     return 0
+        for j in range(len(u_2)):
+            u = np.array([[u_1[i]],
+                          [u_2[j]]])
+            y = np.dot((I - np.dot(A, H))**(-1) , np.dot(B, u))
+            if(y[0] > y_0_max):
+                y_0_max = y[0]
+            if(y[1] > y_1_max):
+                y_1_max = y[1]
+            Q[i][j] = (y[0] - wanted_output)**2 + (y[1] - wanted_output)**2
+    print(f'Y 0 max = {y_0_max}\nY 1 max = {y_1_max}')
+    figure_opt(t, u_1, u_2, Q)
+
+def figure_identyfication(t, U, Y, X):
+    fig1 = plt.figure(figsize=(12,6))
+    ax1 = fig1.add_subplot(1,2,1)
+    ax2 = fig1.add_subplot(1,2,2)
+
+    ax1.plot(t, Y[0],  c='b')
+    ax1.plot(t, Y[1],  c='orange')
+
+    ax2.plot(t, U[0],  c='b')
+    ax2.plot(t, U[1],  c='orange')
+
+    ax1.scatter(t, X[0], c='r')    
+    ax1.scatter(t, X[1], c='green')
+    #  sprawdzałam czy dobrze idą x i są adekwatnie Y z wcześniejszego przejścia
+    fig1.savefig(os.path.join(os.path.dirname(__file__), images_folder, f"Identyfication.png"))
+
+
+def figure_opt(t, u_1, u_2, Q):
+    fig_3d = plt.figure(figsize=(14, 6))
+    ax0 = fig_3d.add_subplot(121, projection='3d')
+    X, Y = np.meshgrid(u_1, u_2)
+    Z = Q
+    ax0.plot_surface(X, Y, Z, cmap='viridis')
+    ax0.set_xlabel('U_1')
+    ax0.set_ylabel('U_2')
+    ax0.set_zlabel('Q(U_1, U_2)')
+    ax0.set_title('...')
+
+    fig_3d.savefig(os.path.join(os.path.dirname(__file__), images_folder, f"Optimalization.png"))
+    return 0
 
 def main():
     duration = 10.0  # Duration of the u_k(seconds)
     N = int(duration)# Amount of samples
     t = np.linspace(0, duration, N, endpoint=False) # <class 'numpy.ndarray'>
-    identification(N)
+    # identification(N)
 
+    optimalization(t, 2)
 
 
 main()
