@@ -3,7 +3,7 @@ import numpy as np
 import random
 import os
 
-C = 0.4
+C = 0.5
 images_folder = "images"
 images_folder2 = "images_n"
 
@@ -20,6 +20,7 @@ I =  np.array([[1, 0],
 y_wanted = np.array([[4],
                 [4]])
 
+# symulacja sygnału
 def simulation(N):
     u_1 = np.random.uniform(0, 3, N)
     u_2 = np.random.uniform(0, 3, N)
@@ -35,6 +36,7 @@ def simulation(N):
 
     return U, Y, X
 
+# identyfikacja wartości A i B
 def identification(N): 
     U, Y, X = simulation(N)
     W_1 = np.array([X[0], U[0]]) # for block 1 # ZAMIENIONO KOLEJNOŚĆ X i U - DOSTALISMY DOBRA KOLEJNOSC A I B!
@@ -54,12 +56,14 @@ def identification(N):
 
     return U, Y, X, A_est, B_est
 
+#  oczekiwane wartości u bez ograniczeń 
 def wanted_input_without_restraints():
     K = np.dot(np.linalg.inv(I - np.dot(A, H)), B)
     u = np.dot(np.linalg.inv(K), y_wanted)
     print(f"U idealne: {u}")
     return u, K
 
+# wyliczanie watrości y od u1 i u2
 def Q(u, K):
     u0 = u[0]
     u1 = u[1]
@@ -68,7 +72,8 @@ def Q(u, K):
     y2 = K[1,0] * u0 + K[1,1] * u1
     return (y1 - y_wanted[0,0])**2 + (y2 - y_wanted[1,0])**2
 
-# wszykujemy 
+# wszykujemy || oczekiwane wartości z ograniczeniami na u1 i u2
+#  czy tutaj nie powinno być od wyliczonego A i B ?
 def wanted_input_with_restraints_1():
     wanted_point, K = wanted_input_without_restraints()
     u2_values = np.linspace(-1, 1, num=1001) # od -1 do 1.01
@@ -133,7 +138,6 @@ def optimalization(t, wanted_output):
     y_0_max = 0
     y_1_max = 0
     for i in range(len(u_1)):
-        min = 5
         for j in range(len(u_2)):
             u = np.array([[u_1[i]],
                           [u_2[j]]])
@@ -147,7 +151,7 @@ def optimalization(t, wanted_output):
     figure_opt(t, u_1, u_2, Q)
 
 # raczej nie będzie się dało tego zrobić
-def parameters_identifucation_plot(t): #A_est, B_est
+def parameters_identification_plot(t): #A_est, B_est
     fig1 = plt.figure(figsize=(12,6))
     ax1 = fig1.add_subplot(1,2,1)
     ax2 = fig1.add_subplot(1,2,2)
@@ -162,7 +166,7 @@ def parameters_identifucation_plot(t): #A_est, B_est
     # ax1.scatter(t, X[0], c='r')    
     # ax1.scatter(t, X[1], c='green')
 
-    fig1.savefig(os.path.join(os.path.dirname(__file__), images_folder2, f"Identification.png"))    
+    fig1.savefig(os.path.join(os.path.dirname(__file__), images_folder2, f"Identification2.png"))    
 
 def figure_identification(t, U, Y, X):
     fig1 = plt.figure(figsize=(12,6))

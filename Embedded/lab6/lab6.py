@@ -13,23 +13,19 @@ led = Pin(2, Pin.OUT)
 def morse_code(parsed_word):
     for letter in parsed_word:
         for morse_signal in alphabet[ord(letter) - ord('A')][letter]:
-            led.off() # zalaczenie diody
+            led.off() 
             if morse_signal == 1:
                 time.sleep_ms(500)
             elif morse_signal == 2:
                 time.sleep_ms(1000)
             led.on()
             time.sleep_ms(200)
-        time.sleep_ms(100)  # Przerwa między literami
+        time.sleep_ms(100) 
 def handle_telnet_connection(client_socket):
-    # tytuł
     client_socket.sendall(b"Word to Morse Code converter\n")
     try:
         while True:
-            # wysyłamy informacje na terminal klienta
             client_socket.sendall("Prosze podac slowo:  ")
-            # pobieramy dane ze zdalnego terminalu
-            # 1024 bajty naraz, konwerujemy do string (kodowane utf-8), usuwamy białe znaki
             data = client_socket.recv(1024).decode('utf-8').strip()
             if not data:
                 break
@@ -42,29 +38,28 @@ def handle_telnet_connection(client_socket):
                 client_socket.sendall("Podano znak spoza alfabetu!")
             else:
                 morse_code(parsed_word)
-    #idk czy tu powinnimy jakas obsluge zakonczenia robic czy nie?
     except Exception as e:
-        print("Blad:", e) # tego chyba damy rady wyslac klientowi ja dostalismy blad
-    finally: # zawsze się wykona - nawet jeśli bedzie blad
+        print("Blad:", e)
+    finally: 
         client_socket.close()
 def telnet_server():
-    # ESP8266 jako Access Point
+    ap_static_ip = "192.168.4.44"
+    ap_gateway = "192.168.4.1"
+    ap_subnet = "255.255.255.0"
     ap = network.WLAN(network.AP_IF)
     ap.active(True)
     ap.config(essid="ESP8266-AP", password="password123")
-    # utworzenie socketu (z protokołami IPv4 i TCP - połączenie strumieniowe)
+    ap.ifconfig((ap_static_ip, ap_gateway, ap_subnet, ap_gateway ))
+    print("Adres IPv4 AP: ", ap.ifconfig()[0])
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # 23 - standardowy port Telnet
-    # 0.0.0.0 - serwer będzie nasłuchiwał na wszystkich dostępnych interfejsach sieciowych
-    # idk czy możemy jakiś konkretny interfejs ustawić
     server_socket.bind(('0.0.0.0', 23))
-    # uruchamienie serwer w trybie nasłuchiwania na przychodzące połączenia. 
-    # 1 - serwer akceptuje jedno połączenie w danym momencie
     server_socket.listen(1)
+    print("Dzialaaaaa <3")
     while True:
-        # oczekiwanie na połączenie
+        print("Proba polaczenia z klientem ") # wypisze to w interpreterze MicroPythona
         client_socket, client_addr = server_socket.accept()
         print("Polaczenie z: ", client_addr) # wypisze to w interpreterze MicroPythona
         handle_telnet_connection(client_socket)
 if __name__ == "__main__":
     telnet_server()
+
