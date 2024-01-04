@@ -27,7 +27,7 @@ y_wanted = np.array([[4],
 csv_file_path =os.path.join(os.path.dirname(__file__), "images/data.csv")
 
 # symulacja sygnału
-def simulation(N):
+def simulation():
     u_1 = np.random.uniform(0, 3, N)
     u_2 = np.random.uniform(0, 3, N)
     z_1 = [C *(random.random() + random.random() - 1) for _ in range(N)]
@@ -40,11 +40,11 @@ def simulation(N):
         Y[:,k] = np.dot(np.dot(np.linalg.inv(I - np.dot(A, H)), B), U[:,k]) + np.dot(np.linalg.inv(I - np.dot(A, H)), Z[:,k])
         X[:,k] = np.dot(H, Y[:,k])
 
-    return U, Y, X
+    return U, Y, X, Z
 
 # identyfikacja wartości A i B
-def identification(N): 
-    U, Y, X = simulation(N)
+def identification(t): 
+    U, Y, X, Z = simulation()
     W_1 = np.array([X[0], U[0]]) # for block 1 # ZAMIENIONO KOLEJNOŚĆ X i U - DOSTALISMY DOBRA KOLEJNOSC A I B!
     W_2 = np.array([X[1], U[1]]) # for block 2
     EST = np.zeros((2,2)) # pierwsza kolumna to a, druga to b
@@ -61,10 +61,17 @@ def identification(N):
     print(f'a_2 i b_2 = {EST[1]}')
     with open(csv_file_path, 'a', newline='') as csv_file:
         writer = csv.writer(csv_file)
+        writer.writerow(["NEXT:"])
         writer.writerow(["A estymowane", A_est])
         writer.writerow(["B estymowane", B_est])
 
-    return
+    ##################################    
+    Y_est =  np.zeros((2,N))
+    for k in range(N):
+        Y_est[:,k] = np.dot(np.dot(np.linalg.inv(I - np.dot(A_est, H)), B_est), U[:,k])
+    figure_identification(t, Y, Y_est)
+    ##################################
+    return A_est, B_est
 
 #  oczekiwane wartości u bez ograniczeń 
 def wanted_input_without_restraints():
@@ -126,6 +133,7 @@ def wanted_input_with_restraints_1():
         writer = csv.writer(csv_file)
         writer.writerow(["Optimal point:", point])
         writer.writerow(["Minimum value:", min_prev])
+        writer.writerow([])
     return point, wanted_point
 
 
@@ -158,22 +166,25 @@ def optimisation_plot():
 
     plt.axis('equal')
     plt.legend()
-    fig1.savefig(os.path.join(os.path.dirname(__file__), images_folder2, f"Optimisation.png"))    
+    fig1.savefig(os.path.join(os.path.dirname(__file__), images_folder, f"Optimisation.png"))    
 
 
-def figure_identification(t, U, Y, X):
+def figure_identification(t, Y, Y_est,):
     fig1 = plt.figure(figsize=(12,6))
     ax1 = fig1.add_subplot(1,2,1)
     ax2 = fig1.add_subplot(1,2,2)
 
-    ax1.plot(t, Y[0],  c='b')
-    ax1.plot(t, Y[1],  c='orange')
+    ax1.plot(t, Y[0],  c='r')
+    ax1.plot(t, Y_est[0], c='b')
+    ax1.set_title("Blok 1", y=0.0)
 
-    ax2.plot(t, U[0],  c='b')
-    ax2.plot(t, U[1],  c='orange')
+    ax2.plot(t, Y[1],  c='r')
+    ax2.plot(t, Y_est[1], c='b')
+    ax2.set_title("Blok 2", y=0.0)
+    
+    fig1.legend(['Parametry rzeczywiste', 'Parametry estymowane'])
+    fig1.suptitle("Sygnał wyjściowy parametrów rzeczywistych oraz estymowanych")
 
-    ax1.scatter(t, X[0], c='r')    
-    ax1.scatter(t, X[1], c='green')
     #  sprawdzałam czy dobrze idą x i są adekwatnie Y z wcześniejszego przejścia
     fig1.savefig(os.path.join(os.path.dirname(__file__), images_folder, f"Identyfication.png"))
 
@@ -181,7 +192,7 @@ def figure_identification(t, U, Y, X):
 def main():
     t = np.linspace(0, duration, N, endpoint=False) # <class 'numpy.ndarray'>
     # simulation(N)
-    identification(N)
+    identification(t)
     
     optimisation_plot()
     # parameters_identifucation_plot(t)
